@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Processing API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        #results {
+            white-space: pre-wrap;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .file-list {
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .file-item {
+            padding: 5px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+        }
+        .file-item:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF Processing API Test</h1>
+    
+    <div class="section">
+        <h2>API Status</h2>
+        <button id="checkStatus">Check Status</button>
+        <div id="statusResult"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Process PDF</h2>
+        <input type="file" id="pdfFile" accept=".pdf">
+        <button id="processPdf">Process PDF</button>
+        <div id="processResult"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Reprocess Existing PDF</h2>
+        <p>Reprocess a PDF file that has already been uploaded to the server.</p>
+        <button id="listFiles">List Uploaded Files</button>
+        <div id="fileList" class="file-list"></div>
+        <input type="text" id="filename" placeholder="Enter filename or select from list above">
+        <button id="reprocessPdf">Reprocess PDF</button>
+        <div id="reprocessResult"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Query</h2>
+        <textarea id="queryText" rows="3" placeholder="Enter your query here..."></textarea>
+        <label for="topK">Number of results:</label>
+        <input type="number" id="topK" value="5" min="1" max="20">
+        <button id="sendQuery">Send Query</button>
+        <h3>Results:</h3>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        
+        // Check Status
+        document.getElementById('checkStatus').addEventListener('click', async () => {
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                const data = await response.json();
+                document.getElementById('statusResult').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('statusResult').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Process PDF
+        document.getElementById('processPdf').addEventListener('click', async () => {
+            const fileInput = document.getElementById('pdfFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('processResult').innerHTML = 
+                    `<p style="color: red;">Please select a PDF file</p>`;
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                document.getElementById('processResult').innerHTML = 
+                    `<p>Processing PDF, please wait...</p>`;
+                
+                const response = await fetch(`${API_URL}/process-pdf`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                document.getElementById('processResult').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('processResult').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+        
+        // List Uploaded Files
+        document.getElementById('listFiles').addEventListener('click', async () => {
+            try {
+                // This is a simple implementation that lists files from a static endpoint
+                // In a real application, you would need to implement this endpoint on your server
+                const response = await fetch(`${API_URL}/list-files`);
+                
+                // If the endpoint doesn't exist, we'll simulate it with a fallback
+                if (!response.ok) {
+                    // Fallback: Show a message that the endpoint is not implemented
+                    document.getElementById('fileList').innerHTML = 
+                        `<p>The list-files endpoint is not implemented. Please enter the filename manually.</p>`;
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.files && data.files.length > 0) {
+                    let filesHtml = '';
+                    data.files.forEach(file => {
+                        filesHtml += `<div class="file-item" onclick="selectFile('${file}')">${file}</div>`;
+                    });
+                    document.getElementById('fileList').innerHTML = filesHtml;
+                } else {
+                    document.getElementById('fileList').innerHTML = 
+                        `<p>No PDF files found in uploads directory</p>`;
+                }
+            } catch (error) {
+                // If there's an error (like the endpoint doesn't exist), we'll use a fallback
+                document.getElementById('fileList').innerHTML = 
+                    `<p>Could not list files. Please enter the filename manually.</p>`;
+            }
+        });
+        
+        // Function to select a file from the list
+        window.selectFile = function(filename) {
+            document.getElementById('filename').value = filename;
+        };
+        
+        // Reprocess PDF
+        document.getElementById('reprocessPdf').addEventListener('click', async () => {
+            const filename = document.getElementById('filename').value.trim();
+            
+            if (!filename) {
+                document.getElementById('reprocessResult').innerHTML = 
+                    `<p style="color: red;">Please enter a filename or select from the list</p>`;
+                return;
+            }
+            
+            try {
+                document.getElementById('reprocessResult').innerHTML = 
+                    `<p>Reprocessing PDF, please wait...</p>`;
+                
+                const response = await fetch(`${API_URL}/reprocess-pdf`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filename: filename
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('reprocessResult').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('reprocessResult').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Send Query
+        document.getElementById('sendQuery').addEventListener('click', async () => {
+            const queryText = document.getElementById('queryText').value.trim();
+            const topK = parseInt(document.getElementById('topK').value);
+            
+            if (!queryText) {
+                document.getElementById('results').innerHTML = 
+                    `<p style="color: red;">Please enter a query</p>`;
+                return;
+            }
+            
+            try {
+                document.getElementById('results').innerHTML = 
+                    `<p>Searching, please wait...</p>`;
+                
+                const response = await fetch(`${API_URL}/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: queryText,
+                        top_k: topK
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('results').innerHTML = 
+                        `<p style="color: red;">Error: ${data.error}</p>`;
+                    return;
+                }
+                
+                let resultsHtml = `<p><strong>Processed Query:</strong> ${data.processed_query}</p>`;
+                resultsHtml += `<ol>`;
+                
+                data.results.forEach(result => {
+                    resultsHtml += `
+                        <li>
+                            <div><strong>Sentence:</strong> ${result.sentence}</div>
+                            <div><strong>Distance:</strong> ${result.distance.toFixed(4)}</div>
+                        </li>
+                    `;
+                });
+                
+                resultsHtml += `</ol>`;
+                document.getElementById('results').innerHTML = resultsHtml;
+                
+            } catch (error) {
+                document.getElementById('results').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Auto-check status when page loads
+        window.addEventListener('load', () => {
+            document.getElementById('checkStatus').click();
+        });
+    </script>
+</body>
+</html>
