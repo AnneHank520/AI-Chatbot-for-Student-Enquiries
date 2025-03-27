@@ -33,13 +33,8 @@ please answer the query based on the documents:\n{context}'''
     for chunk in response:
         message = chunk.output.choices[0].message
 
-        # # 打印 reasoning
-        # reasoning = getattr(message, "reasoning", None)
-        # if reasoning and getattr(reasoning, "content", ""):
-        #     print(reasoning.content, end='', flush=True)
-        #     reasoning_content += reasoning.content
 
-        # 打印回答
+
         if getattr(message, "content", ""):
             if not is_answering:
                 print("\n" + "=" * 20 + "Answer" + "=" * 20)
