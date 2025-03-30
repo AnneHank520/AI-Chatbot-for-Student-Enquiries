@@ -2,7 +2,7 @@ import { CreateMessage } from '@/db';
 import { createDeepSeek } from '@ai-sdk/deepseek';
 import { streamText } from 'ai';
 
-// Allow streaming responses up to 30 seconds
+// Allow streaming responses up to 20 seconds
 export const maxDuration = 20;
 
 const qwen_turbo = createDeepSeek({

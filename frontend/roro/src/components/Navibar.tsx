@@ -23,26 +23,44 @@ const Navibar = (props: Props) => {
     const pathname = usePathname()
 
     return (
-        <div className='h-screen bg-gray-50'>
-            <div className="flex items-center justify-center">
-                <p className="font-bold text-2xl">
-                    roro
-                </p>
-            </div>
+        <div className='h-screen w-full flex flex-col items-end'>
+            <div className='flex flex-col w-129 flex-1 my-7'>
+                {/* Requests */}
+                <div className="mb-6">
+                    <h2 className="text-2xl font-semibold text-[#183728] mb-2">Requests</h2>
+                    <div className="bg-white text-gray-300 text-xl text-center p-3 rounded-2xl">
+                    No friend requests
+                    </div>
+                </div>
 
-            <div className='h-10 flex items-center justify-center mt-4
-                cursor-pointer'
-                onClick={() => {
+                {/* Inbox 区域 */}
+                <div>
+                    <h2 className="text-2xl font-semibold text-[#183728] mb-2">Inbox</h2>
+                    {/* 外层容器，带轻微阴影/圆角，包住联系人列表 */}
+                    <div className="bg-white rounded-2xl shadow-sm p-3" 
+                    onClick={() => {
                     router.push('/')
-                }}
-            >
-                <p className='inline-block bg-blue-100 rounded-lg px-2 py-1 font-thin'>
-                    Create New Session
-                </p>
-            </div>
+                    }}>
+                        <ul className="space-y-2">
+                            <li className="flex items-center space-x-3 p-3 rounded-2xl cursor-pointer border">
+                                {/* 头像 */}
+                                <div className="flex-shrink-0 h-18 w-18 rounded-full bg-gray-300 
+                                flex items-center justify-center text-white font-bold">
+                                R
+                                </div>
+
+                                {/* 用户信息 */}
+                                <div>
+                                    <p className="text-3xl">roro</p>
+                                    <p className="text-sm text-gray-500">ChatbotAI of reKro</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
 
             {/* catalogue */}
-            <div className='flex flex-col items-center justify-center gap-2 p-6'>
+            {/* <div className='flex flex-col items-center justify-center gap-2 p-6'>
                 {chats?.data?.map((chat: ChatModel) => (
                     <div className='w-full h-10'
                          key={chat.id}
@@ -56,6 +74,7 @@ const Navibar = (props: Props) => {
                         </p>
                     </div>
                 ))}
+            </div> */}
             </div>
         </div>
     )
