@@ -92,11 +92,55 @@
     <div class="section">
         <h2>Query</h2>
         <textarea id="queryText" rows="3" placeholder="Enter your query here..."></textarea>
-        <label for="topK">Number of results:</label>
-        <input type="number" id="topK" value="5" min="1" max="20">
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <div>
+                <label for="topK">Result Count:</label>
+                <input type="number" id="topK" value="12" min="1" max="30">
+            </div>
+            <div>
+                <label for="contextSize">Context Size:</label>
+                <input type="number" id="contextSize" value="5" min="0" max="10">
+            </div>
+        </div>
         <button id="sendQuery">Send Query</button>
+        <div>
+            <label><input type="checkbox" id="showPrompt" checked> Show Prompt Template</label>
+        </div>
         <h3>Results:</h3>
         <div id="results"></div>
+        
+        <div id="promptTemplate" style="margin-top: 20px; display: none;">
+            <h3>Prompt Template:</h3>
+            <textarea id="promptText" rows="15" style="width: 100%; font-family: monospace;"></textarea>
+            <button id="copyPrompt" style="margin-top: 10px;">Copy Prompt Template</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Query with LLM Answer</h2>
+        <textarea id="queryTextLLM" rows="3" placeholder="Enter your query here..."></textarea>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <div>
+                <label for="topKLLM">Result Count:</label>
+                <input type="number" id="topKLLM" value="12" min="1" max="30">
+            </div>
+            <div>
+                <label for="contextSizeLLM">Context Size:</label>
+                <input type="number" id="contextSizeLLM" value="5" min="0" max="10">
+            </div>
+            <div>
+                <label for="modelName">Model:</label>
+                <input type="text" id="modelName" value="qwen-plus" style="width: 120px;">
+            </div>
+        </div>
+        <button id="generateAnswer">Generate Answer</button>
+        <h3>LLM Answer:</h3>
+        <div id="llmAnswer" style="white-space: pre-wrap; background-color: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 10px;"></div>
+        
+        <div id="promptTemplateLLM" style="margin-top: 20px;">
+            <h3>Prompt Template:</h3>
+            <textarea id="promptTextLLM" rows="10" style="width: 100%; font-family: monospace;"></textarea>
+        </div>
     </div>
 
     <script>
@@ -223,6 +267,7 @@
         document.getElementById('sendQuery').addEventListener('click', async () => {
             const queryText = document.getElementById('queryText').value.trim();
             const topK = parseInt(document.getElementById('topK').value);
+            const contextSize = parseInt(document.getElementById('contextSize').value);
             
             if (!queryText) {
                 document.getElementById('results').innerHTML = 
@@ -241,7 +286,8 @@
                     },
                     body: JSON.stringify({
                         query: queryText,
-                        top_k: topK
+                        top_k: topK,
+                        context_size: contextSize
                     })
                 });
                 
@@ -250,17 +296,56 @@
                 if (data.error) {
                     document.getElementById('results').innerHTML = 
                         `<p style="color: red;">Error: ${data.error}</p>`;
+                    document.getElementById('promptTemplate').style.display = 'none';
                     return;
                 }
                 
                 let resultsHtml = `<p><strong>Processed Query:</strong> ${data.processed_query}</p>`;
+                
+                // Display extracted keywords
+                if (data.keywords && data.keywords.length > 0) {
+                    resultsHtml += `<div><strong>Extracted Keywords:</strong> `;
+                    data.keywords.forEach((keyword, index) => {
+                        resultsHtml += `<span class="keyword" style="margin-right: 5px; padding: 2px 5px; background-color: #f0f0f0; border-radius: 3px;">${keyword}</span>`;
+                    });
+                    resultsHtml += `</div>`;
+                }
+                
+                // Display extracted URL links
+                if (data.prompt_data && data.prompt_data.relevant_links && data.prompt_data.relevant_links.length > 0) {
+                    resultsHtml += `<div><strong>Relevant Links:</strong></div><ul>`;
+                    data.prompt_data.relevant_links.forEach(link => {
+                        resultsHtml += `<li><a href="${link}" target="_blank">${link}</a></li>`;
+                    });
+                    resultsHtml += `</ul>`;
+                }
+                
                 resultsHtml += `<ol>`;
                 
                 data.results.forEach(result => {
+                    const matchBadges = [];
+                    if (result.has_keyword_match) {
+                        matchBadges.push('<span style="margin-right: 5px; padding: 2px 5px; background-color: #e6f7ff; border-radius: 3px;">Keyword Match</span>');
+                    }
+                    if (result.has_url_match) {
+                        matchBadges.push('<span style="margin-right: 5px; padding: 2px 5px; background-color: #f6ffed; border-radius: 3px;">URL Match</span>');
+                    }
+                    
+                    let urlsHtml = '';
+                    if (result.urls && result.urls.length > 0) {
+                        urlsHtml = `<div><strong>URLs:</strong> `;
+                        result.urls.forEach(url => {
+                            urlsHtml += `<a href="${url}" target="_blank" style="margin-right: 10px;">${url}</a>`;
+                        });
+                        urlsHtml += `</div>`;
+                    }
+                    
                     resultsHtml += `
                         <li>
-                            <div><strong>Sentence:</strong> ${result.sentence}</div>
-                            <div><strong>Distance:</strong> ${result.distance.toFixed(4)}</div>
+                            <div>${matchBadges.join('')}</div>
+                            <div><strong>Content:</strong> ${result.sentence}</div>
+                            <div><strong>Similarity:</strong> ${result.distance.toFixed(4)}</div>
+                            ${urlsHtml}
                         </li>
                     `;
                 });
@@ -268,15 +353,102 @@
                 resultsHtml += `</ol>`;
                 document.getElementById('results').innerHTML = resultsHtml;
                 
+                // Display prompt template
+                if (data.prompt_data && data.prompt_data.prompt_template) {
+                    document.getElementById('promptText').value = data.prompt_data.prompt_template;
+                    
+                    if (document.getElementById('showPrompt').checked) {
+                        document.getElementById('promptTemplate').style.display = 'block';
+                    } else {
+                        document.getElementById('promptTemplate').style.display = 'none';
+                    }
+                } else {
+                    document.getElementById('promptTemplate').style.display = 'none';
+                }
+                
             } catch (error) {
                 document.getElementById('results').innerHTML = 
                     `<p style="color: red;">Error: ${error.message}</p>`;
+                document.getElementById('promptTemplate').style.display = 'none';
             }
+        });
+        
+        // Show/hide prompt template
+        document.getElementById('showPrompt').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('promptTemplate').style.display = 'block';
+            } else {
+                document.getElementById('promptTemplate').style.display = 'none';
+            }
+        });
+        
+        // Copy prompt template
+        document.getElementById('copyPrompt').addEventListener('click', function() {
+            const promptText = document.getElementById('promptText');
+            promptText.select();
+            document.execCommand('copy');
+            
+            // Show success message
+            const originalText = this.textContent;
+            this.textContent = 'Copied!';
+            setTimeout(() => {
+                this.textContent = originalText;
+            }, 2000);
         });
         
         // Auto-check status when page loads
         window.addEventListener('load', () => {
             document.getElementById('checkStatus').click();
+        });
+
+        // Generate Answer
+        document.getElementById('generateAnswer').addEventListener('click', async () => {
+            const queryText = document.getElementById('queryTextLLM').value.trim();
+            const topK = parseInt(document.getElementById('topKLLM').value);
+            const contextSize = parseInt(document.getElementById('contextSizeLLM').value);
+            const model = document.getElementById('modelName').value.trim();
+            
+            if (!queryText) {
+                document.getElementById('llmAnswer').innerHTML = 
+                    `<p style="color: red;">Please enter a query</p>`;
+                return;
+            }
+            
+            try {
+                document.getElementById('llmAnswer').innerHTML = 
+                    `<p>Generating answer, please wait...</p>`;
+                
+                const response = await fetch(`${API_URL}/generate-answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: queryText,
+                        top_k: topK,
+                        context_size: contextSize,
+                        model: model
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('llmAnswer').innerHTML = 
+                        `<p style="color: red;">Error: ${data.error}</p>`;
+                    return;
+                }
+                
+                // Display the answer
+                document.getElementById('llmAnswer').innerHTML = data.answer;
+                
+                // Display the prompt template used
+                document.getElementById('promptTextLLM').value = data.prompt_template;
+                
+            } catch (error) {
+                document.getElementById('llmAnswer').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
         });
     </script>
 </body>
