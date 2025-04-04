@@ -26465,7 +26465,10 @@
     "index": 1610,
     "length": 34,
     "has_url": false,
-    "urls": [],
+    "urls": [
+      "https://youtu.be/eqwnsisj3q4",
+      "https://youtu.be/eqwnsisj3q4"
+    ],
     "keywords": [
       "check",
       "youtube",
@@ -27102,7 +27105,10 @@
     "index": 1651,
     "length": 34,
     "has_url": false,
-    "urls": [],
+    "urls": [
+      "https://overseasstudentsaustralia.com/short-courses-for-international-students/",
+      "https://overseasstudentsaustralia.com/short-courses-for-international-students/"
+    ],
     "keywords": [
       "driver",
       "high",
@@ -32078,5 +32084,270 @@
       "melbourne",
       "australia"
     ]
+  },
+  {
+    "text": "nsw government nsw government find information, access services and have your say search nsw.gov.au search",
+    "index": 1970,
+    "length": 15,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "nsw",
+      "government",
+      "search",
+      "find",
+      "information",
+      "access",
+      "service",
+      "nsw.gov.au"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/",
+      "title": "NSW Government"
+    }
+  },
+  {
+    "text": "what are you looking for?",
+    "index": 1971,
+    "length": 5,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "look"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/"
+    }
+  },
+  {
+    "text": "about nsw arts and culture business and economy community services driving, boating and transport education and training emergency employment energy environment, land and water family and relationships grants and funding health housing and construction legal and justice money and taxes nsw government regional and primary industries sport and recreation visas and migration visiting and exploring nsw image tropical cyclone alfred recovery updates get the latest information on recovery support in areas that have been impacted by floods and storms caused by cyclone alfred.",
+    "index": 1972,
+    "length": 83,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "nsw",
+      "cyclone",
+      "alfred",
+      "recovery",
+      "art",
+      "culture",
+      "business",
+      "economy",
+      "community",
+      "service"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/"
+    }
+  },
+  {
+    "text": "east image bikes, e-bikes and e-scooters learn the difference between small mobility devices, what the rules are, and how to stay safe when riding in nsw.",
+    "index": 1973,
+    "length": 26,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "bike",
+      "east",
+      "image",
+      "scooter",
+      "learn",
+      "difference",
+      "small",
+      "mobility",
+      "device",
+      "rule"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/"
+    }
+  },
+  {
+    "text": "east image cost of living hub make the most of your money with tips, tools, and access to trusted advice and support backed by the nsw government.",
+    "index": 1974,
+    "length": 27,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "east",
+      "image",
+      "cost",
+      "live",
+      "hub",
+      "money",
+      "tip",
+      "tool",
+      "access",
+      "trust"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/"
+    }
+  },
+  {
+    "text": "east latest ministerial media releases ministerial media release 4 april 2025 next phase of $830 million liverpool hospital redevelopment under way demolition works as part of preparations for the second phase of the liverpool health and academic precinct (lhap) redevelopment of liverpool hospital will begin this month.",
+    "index": 1975,
+    "length": 47,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "liverpool",
+      "ministerial",
+      "medium",
+      "release",
+      "phase",
+      "hospital",
+      "redevelopment",
+      "late",
+      "april",
+      "way"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/"
+    }
+  },
+  {
+    "text": "ministerial media release 4 april 2025 major milestone marked as minns labor government successfully transitions junee correctional centre into public hands minister for corrections anoulack chanthivong is today visiting junee correctional centre with corrective services nsw (csnsw) commissioner gary mccahon, to mark the minns labor government’s successful transition of the junee correctional centre into public hands.",
+    "index": 1976,
+    "length": 56,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "junee",
+      "correctional",
+      "centre",
+      "mark",
+      "minns",
+      "labor",
+      "government",
+      "transition",
+      "public",
+      "hand"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/"
+    }
+  },
+  {
+    "text": "ministerial media release 4 april 2025 eurobodalla residents invited to community forum the eurobodalla community is invited to attend a community forum to receive an update from southern nsw local health district (snswlhd) about the eurobodalla health service, including the new $330 million eurobodalla regional hospital and $20 million batemans bay community health facility.",
+    "index": 1977,
+    "length": 54,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "eurobodalla",
+      "community",
+      "health",
+      "invite",
+      "forum",
+      "ministerial",
+      "medium",
+      "release",
+      "april",
+      "resident"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/"
+    }
+  },
+  {
+    "text": "ministerial media release 4 april 2025 nsw government extends mental health support for first responders through bold new strategy the minns labor government has launched a new mental health and wellbeing strategy for first responders which now recognises forestry workers, national park employees, and road and transport workers who put their lives on the line keeping communities safe.",
+    "index": 1978,
+    "length": 58,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "government",
+      "mental",
+      "health",
+      "responder",
+      "new",
+      "strategy",
+      "worker",
+      "ministerial",
+      "medium",
+      "release"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/"
+    }
+  },
+  {
+    "text": "ministerial media release 4 april 2025 harmful lgbtq+ conversion practices now banned in nsw dangerous and damaging lgbtq+ conversion practices will be banned from today.",
+    "index": 1979,
+    "length": 25,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "lgbtq+",
+      "conversion",
+      "practice",
+      "ban",
+      "ministerial",
+      "medium",
+      "release",
+      "april",
+      "harmful",
+      "dangerous"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/"
+    }
+  },
+  {
+    "text": "read all ministerial media releases have your say on nsw policy and projects bourke transport nsw plan for nature independent review primary industries workforce strategy supporting regional essential services sydney region growth centres review of the nsw companion animals laws browse consultations contact us a headshot of nsw premier chris minns outside chris minns premier of nsw contact the premier contact a minister contact your local member top of page north",
+    "index": 1980,
+    "length": 71,
+    "has_url": true,
+    "urls": [
+      "https://www.nsw.gov.au/"
+    ],
+    "keywords": [
+      "nsw",
+      "contact",
+      "premier",
+      "review",
+      "chris",
+      "minns",
+      "read",
+      "ministerial",
+      "medium",
+      "release"
+    ],
+    "metadata": {
+      "source": "url",
+      "url": "https://www.nsw.gov.au/"
+    }
   }
 ]
