@@ -61,46 +61,198 @@
         .file-item:hover {
             background-color: #e0e0e0;
         }
+        .result-box {
+            white-space: pre-wrap;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #f0f0f0;
+            border-color: #ddd;
+        }
     </style>
 </head>
 <body>
     <h1>PDF Processing API Test</h1>
     
-    <div class="section">
-        <h2>API Status</h2>
-        <button id="checkStatus">Check Status</button>
-        <div id="statusResult"></div>
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('pdf-tab')">PDF Processing</div>
+        <div class="tab" onclick="showTab('url-tab')">URL Processing</div>
+        <div class="tab" onclick="showTab('query-tab')">Query & LLM</div>
     </div>
     
-    <div class="section">
-        <h2>Process PDF</h2>
-        <input type="file" id="pdfFile" accept=".pdf">
-        <button id="processPdf">Process PDF</button>
-        <div id="processResult"></div>
+    <div id="pdf-tab" class="tab-content">
+        <div class="section">
+            <h2>API Status</h2>
+            <button id="checkStatus">Check Status</button>
+            <div id="statusResult"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Process PDF</h2>
+            <p>Upload a new PDF file to process and add to the vector database.</p>
+            <div style="margin-bottom: 10px; padding: 10px; background-color: #e8f5e9; border-radius: 4px;">
+                <strong>📝 Note:</strong> Files will now be <strong>added</strong> to the existing database rather than replacing it.
+                All previously processed files and websites will remain in the index.
+            </div>
+            <input type="file" id="pdfFile" accept=".pdf">
+            <button id="processPdf">Process PDF</button>
+            <div id="processResult"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Reprocess Existing PDF</h2>
+            <p>Reprocess a PDF file that has already been uploaded to the server.</p>
+            <div style="margin-bottom: 10px; padding: 10px; background-color: #e8f5e9; border-radius: 4px;">
+                <strong>Note:</strong> By default, previous entries from this file will be removed before adding new content.
+            </div>
+            <button id="listFiles">List Uploaded Files</button>
+            <div id="fileList" class="file-list"></div>
+            <input type="text" id="filename" placeholder="Enter filename or select from list above">
+            <button id="reprocessPdf">Reprocess PDF</button>
+            <div id="reprocessResult"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Delete PDF Content</h2>
+            <p>Remove all content from a specific PDF file from the vector database.</p>
+            <div style="margin-bottom: 10px; padding: 10px; background-color: #ffebee; border-radius: 4px;">
+                <strong>⚠️ Warning:</strong> This will permanently remove all indexed content from the selected PDF file.
+                The file itself will remain in the uploads directory.
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                <div style="flex-grow: 1;">
+                    <input type="text" id="filenameToDelete" placeholder="Enter filename or select from list above">
+                </div>
+                <button id="deletePdfContent" style="background-color: #f44336;">Delete Content</button>
+            </div>
+            <div id="deleteResult"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Database Status</h2>
+            <p>View and manage the current state of the vector database.</p>
+            <div style="display: flex; gap: 10px;">
+                <button id="viewDbStats">View Database Statistics</button>
+                <button id="listSources" style="background-color: #2196F3;">List Content Sources</button>
+            </div>
+            <div id="dbStatsResult" style="margin-top: 10px;"></div>
+        </div>
     </div>
     
-    <div class="section">
-        <h2>Reprocess Existing PDF</h2>
-        <p>Reprocess a PDF file that has already been uploaded to the server.</p>
-        <button id="listFiles">List Uploaded Files</button>
-        <div id="fileList" class="file-list"></div>
-        <input type="text" id="filename" placeholder="Enter filename or select from list above">
-        <button id="reprocessPdf">Reprocess PDF</button>
-        <div id="reprocessResult"></div>
+    <div id="url-tab" class="tab-content" style="display: none;">
+        <div class="section">
+            <h2>Extract URL Content</h2>
+            <p>Fetch content from a URL and extract its text.</p>
+            <input type="text" id="urlToExtract" placeholder="Enter URL (e.g., https://example.com)">
+            <button id="extractUrl">Extract Content</button>
+            <div id="extractResult" class="result-box"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Add URL to Vector Database</h2>
+            <p>Extract content from a URL and add it to the vector database.</p>
+            <input type="text" id="urlToAdd" placeholder="Enter URL (e.g., https://example.com)">
+            <button id="addUrl">Add to Database</button>
+            <div id="addUrlResult" class="result-box"></div>
+        </div>
     </div>
     
-    <div class="section">
-        <h2>Query</h2>
-        <textarea id="queryText" rows="3" placeholder="Enter your query here..."></textarea>
-        <label for="topK">Number of results:</label>
-        <input type="number" id="topK" value="5" min="1" max="20">
-        <button id="sendQuery">Send Query</button>
-        <h3>Results:</h3>
-        <div id="results"></div>
+    <div id="query-tab" class="tab-content" style="display: none;">
+        <div class="section">
+            <h2>Query</h2>
+            <textarea id="queryText" rows="3" placeholder="Enter your query here..."></textarea>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <div>
+                    <label for="topK">Result Count:</label>
+                    <input type="number" id="topK" value="12" min="1" max="30">
+                </div>
+                <div>
+                    <label for="contextSize">Context Size:</label>
+                    <input type="number" id="contextSize" value="5" min="0" max="10">
+                </div>
+            </div>
+            <button id="sendQuery">Send Query</button>
+            <div>
+                <label><input type="checkbox" id="showPrompt" checked> Show Prompt Template</label>
+            </div>
+            <h3>Results:</h3>
+            <div id="results"></div>
+            
+            <div id="promptTemplate" style="margin-top: 20px; display: none;">
+                <h3>Prompt Template:</h3>
+                <textarea id="promptText" rows="15" style="width: 100%; font-family: monospace;"></textarea>
+                <button id="copyPrompt" style="margin-top: 10px;">Copy Prompt Template</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Query with LLM Answer</h2>
+            <textarea id="queryTextLLM" rows="3" placeholder="Enter your query here..."></textarea>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <div>
+                    <label for="topKLLM">Result Count:</label>
+                    <input type="number" id="topKLLM" value="12" min="1" max="30">
+                </div>
+                <div>
+                    <label for="contextSizeLLM">Context Size:</label>
+                    <input type="number" id="contextSizeLLM" value="5" min="0" max="10">
+                </div>
+                <div>
+                    <label for="modelName">Model:</label>
+                    <input type="text" id="modelName" value="qwen-plus" style="width: 120px;">
+                </div>
+            </div>
+            <button id="generateAnswer">Generate Answer</button>
+            <h3>LLM Answer:</h3>
+            <div id="llmAnswer" style="white-space: pre-wrap; background-color: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 10px;"></div>
+            
+            <div id="promptTemplateLLM" style="margin-top: 20px;">
+                <h3>Prompt Template:</h3>
+                <textarea id="promptTextLLM" rows="10" style="width: 100%; font-family: monospace;"></textarea>
+            </div>
+        </div>
     </div>
 
     <script>
         const API_URL = 'http://localhost:5000/api';
+        
+        // Tab switching functionality
+        function showTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Show the selected tab content
+            document.getElementById(tabId).style.display = 'block';
+            
+            // Update active tab styling
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Set the clicked tab as active
+            event.currentTarget.classList.add('active');
+        }
         
         // Check Status
         document.getElementById('checkStatus').addEventListener('click', async () => {
@@ -184,6 +336,7 @@
         // Function to select a file from the list
         window.selectFile = function(filename) {
             document.getElementById('filename').value = filename;
+            document.getElementById('filenameToDelete').value = filename;
         };
         
         // Reprocess PDF
@@ -219,10 +372,343 @@
             }
         });
         
+        // Delete PDF Content
+        document.getElementById('deletePdfContent').addEventListener('click', async () => {
+            const filename = document.getElementById('filenameToDelete').value.trim();
+            
+            if (!filename) {
+                document.getElementById('deleteResult').innerHTML = 
+                    `<p style="color: red;">Please enter a filename or select from the list</p>`;
+                return;
+            }
+            
+            // Ask for confirmation
+            if (!confirm(`Are you sure you want to delete all content from "${filename}" from the database?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                document.getElementById('deleteResult').innerHTML = 
+                    `<p>Deleting content, please wait...</p>`;
+                
+                const response = await fetch(`${API_URL}/delete-pdf-content`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filename: filename
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('deleteResult').innerHTML = 
+                        `<p style="color: red;">Error: ${data.error}</p>`;
+                    return;
+                }
+                
+                // Create a visual result
+                let resultHtml = `
+                    <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                        <h3 style="color: ${data.indices_removed > 0 ? '#4caf50' : '#ff9800'};">
+                            ${data.indices_removed > 0 ? '✅ Content Deleted Successfully' : '⚠️ No Content Found'}
+                        </h3>
+                        <p>${data.message}</p>
+                        <div style="margin-top: 10px;">
+                            <div><strong>Sentences removed:</strong> ${data.indices_removed}</div>
+                            <div><strong>Sentences remaining:</strong> ${data.sentences_remaining}</div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('deleteResult').innerHTML = resultHtml;
+                
+                // Update database stats automatically
+                document.getElementById('viewDbStats').click();
+                
+            } catch (error) {
+                document.getElementById('deleteResult').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+        
+        // View Database Statistics
+        document.getElementById('viewDbStats').addEventListener('click', async () => {
+            try {
+                document.getElementById('dbStatsResult').innerHTML = 
+                    `<p>Fetching database statistics...</p>`;
+                
+                const response = await fetch(`${API_URL}/status`);
+                const data = await response.json();
+                
+                // Create a more visual representation
+                let statsHtml = `
+                    <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px;">
+                        <h3>Vector Database Statistics</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div style="padding: 10px; background-color: #e1f5fe; border-radius: 5px;">
+                                <div style="font-size: 24px; font-weight: bold;">${data.sentences_count || 0}</div>
+                                <div>Total Sentences</div>
+                            </div>
+                            <div style="padding: 10px; background-color: #e8f5e9; border-radius: 5px;">
+                                <div style="font-size: 24px; font-weight: bold;">${data.keywords_index_count || 0}</div>
+                                <div>Keywords Indexed</div>
+                            </div>
+                            <div style="padding: 10px; background-color: #fff3e0; border-radius: 5px;">
+                                <div style="font-size: 24px; font-weight: bold;">${data.url_index_count || 0}</div>
+                                <div>URLs Indexed</div>
+                            </div>
+                            <div style="padding: 10px; background-color: ${data.vector_db_loaded ? '#e8f5e9' : '#ffebee'}; border-radius: 5px;">
+                                <div style="font-size: 24px; font-weight: bold;">${data.vector_db_loaded ? 'Yes' : 'No'}</div>
+                                <div>Vector DB Loaded</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                            Last updated: ${new Date().toLocaleString()}
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('dbStatsResult').innerHTML = statsHtml;
+            } catch (error) {
+                document.getElementById('dbStatsResult').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+
+        // List Content Sources
+        document.getElementById('listSources').addEventListener('click', async () => {
+            try {
+                document.getElementById('dbStatsResult').innerHTML = 
+                    `<p>Analyzing content sources...</p>`;
+                
+                // First get the status to check if we have a database
+                const statusResponse = await fetch(`${API_URL}/status`);
+                const statusData = await statusResponse.json();
+                
+                if (!statusData.sentences_loaded) {
+                    document.getElementById('dbStatsResult').innerHTML = 
+                        `<p style="color: orange;">No content loaded in the database yet.</p>`;
+                    return;
+                }
+                
+                // Fetch all sources from the sentences in the database
+                // Since we don't have a dedicated endpoint for this, we'll make a simple query
+                // to get the data and analyze it client-side
+                const queryResponse = await fetch(`${API_URL}/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: "source type content information",
+                        top_k: 10,
+                        context_size: 0
+                    })
+                });
+                
+                const queryData = await queryResponse.json();
+                
+                // Extract source information from the results
+                const sources = {
+                    pdf: new Set(),
+                    url: new Set()
+                };
+                
+                // Count by source type
+                let pdfCount = 0;
+                let urlCount = 0;
+                
+                if (queryData.results) {
+                    queryData.results.forEach(result => {
+                        // Try to extract metadata
+                        const metadata = result.metadata;
+                        if (metadata) {
+                            if (metadata.source === 'pdf') {
+                                sources.pdf.add(metadata.filename);
+                                pdfCount++;
+                            } else if (metadata.source === 'url') {
+                                sources.url.add(metadata.url);
+                                urlCount++;
+                            }
+                        }
+                    });
+                }
+                
+                // Use the URLs found in the results
+                if (queryData.prompt_data && queryData.prompt_data.relevant_links) {
+                    queryData.prompt_data.relevant_links.forEach(url => {
+                        sources.url.add(url);
+                    });
+                }
+                
+                // Also check the PDF files available in the uploads directory
+                const filesResponse = await fetch(`${API_URL}/list-files`);
+                if (filesResponse.ok) {
+                    const filesData = await filesResponse.json();
+                    if (filesData.files) {
+                        filesData.files.forEach(file => {
+                            sources.pdf.add(file);
+                        });
+                    }
+                }
+                
+                // Create a visual representation
+                let sourcesHtml = `
+                    <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px;">
+                        <h3>Content Sources</h3>
+                        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <div style="flex: 1; padding: 10px; background-color: #e8f5e9; border-radius: 5px;">
+                                <h4>PDF Files (${sources.pdf.size})</h4>
+                                <ul style="max-height: 150px; overflow-y: auto; padding-left: 20px;">
+                                    ${Array.from(sources.pdf).map(file => `<li>${file}</li>`).join('')}
+                                    ${sources.pdf.size === 0 ? '<li style="color: #999;">No PDFs found</li>' : ''}
+                                </ul>
+                            </div>
+                            <div style="flex: 1; padding: 10px; background-color: #e1f5fe; border-radius: 5px;">
+                                <h4>URLs (${sources.url.size})</h4>
+                                <ul style="max-height: 150px; overflow-y: auto; padding-left: 20px;">
+                                    ${Array.from(sources.url).map(url => `<li><a href="${url}" target="_blank">${url}</a></li>`).join('')}
+                                    ${sources.url.size === 0 ? '<li style="color: #999;">No URLs found</li>' : ''}
+                                </ul>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                            Total sentences in database: ${statusData.sentences_count || 0}<br>
+                            Note: This is an approximation based on available data
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('dbStatsResult').innerHTML = sourcesHtml;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('dbStatsResult').innerHTML = 
+                    `<p style="color: red;">Error analyzing sources: ${error.message}</p>`;
+            }
+        });
+        
+        // Extract URL Content
+        document.getElementById('extractUrl').addEventListener('click', async () => {
+            const url = document.getElementById('urlToExtract').value.trim();
+            
+            if (!url) {
+                document.getElementById('extractResult').innerHTML = 
+                    `<p style="color: red;">Please enter a URL</p>`;
+                return;
+            }
+            
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                document.getElementById('extractResult').innerHTML = 
+                    `<p style="color: red;">Invalid URL format. URL must start with http:// or https://</p>`;
+                return;
+            }
+            
+            try {
+                document.getElementById('extractResult').innerHTML = 
+                    `<p>Extracting content from URL, please wait...</p>`;
+                
+                const response = await fetch(`${API_URL}/extract-url-content`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        url: url
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('extractResult').innerHTML = 
+                        `<p style="color: red;">Error: ${data.error}</p>`;
+                    return;
+                }
+                
+                // Create a summary view
+                let resultHtml = `<div>
+                    <h3>URL: ${data.url}</h3>
+                    <p><strong>Title:</strong> ${data.title}</p>
+                    <p><strong>Status:</strong> ${data.status}</p>
+                    <p><strong>Content Preview:</strong> ${data.content.substring(0, 300)}...</p>
+                    <details>
+                        <summary>Show full content (${data.content.length} characters)</summary>
+                        <div style="max-height: 300px; overflow-y: auto; padding: 10px; margin-top: 10px; background-color: #f9f9f9;">
+                            ${data.content}
+                        </div>
+                    </details>
+                </div>`;
+                
+                document.getElementById('extractResult').innerHTML = resultHtml;
+                
+                // Auto-copy the URL to the add URL field
+                document.getElementById('urlToAdd').value = url;
+                
+            } catch (error) {
+                document.getElementById('extractResult').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Add URL to Vector Database
+        document.getElementById('addUrl').addEventListener('click', async () => {
+            const url = document.getElementById('urlToAdd').value.trim();
+            
+            if (!url) {
+                document.getElementById('addUrlResult').innerHTML = 
+                    `<p style="color: red;">Please enter a URL</p>`;
+                return;
+            }
+            
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                document.getElementById('addUrlResult').innerHTML = 
+                    `<p style="color: red;">Invalid URL format. URL must start with http:// or https://</p>`;
+                return;
+            }
+            
+            try {
+                document.getElementById('addUrlResult').innerHTML = 
+                    `<p>Processing URL and adding to database, please wait...</p>`;
+                
+                const response = await fetch(`${API_URL}/add-url-to-index`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        url: url
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('addUrlResult').innerHTML = 
+                        `<p style="color: red;">Error: ${data.error}</p>`;
+                    if (data.details) {
+                        document.getElementById('addUrlResult').innerHTML += 
+                            `<p style="color: red;">Details: ${data.details}</p>`;
+                    }
+                    return;
+                }
+                
+                document.getElementById('addUrlResult').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+            } catch (error) {
+                document.getElementById('addUrlResult').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+        
         // Send Query
         document.getElementById('sendQuery').addEventListener('click', async () => {
             const queryText = document.getElementById('queryText').value.trim();
             const topK = parseInt(document.getElementById('topK').value);
+            const contextSize = parseInt(document.getElementById('contextSize').value);
             
             if (!queryText) {
                 document.getElementById('results').innerHTML = 
@@ -241,7 +727,8 @@
                     },
                     body: JSON.stringify({
                         query: queryText,
-                        top_k: topK
+                        top_k: topK,
+                        context_size: contextSize
                     })
                 });
                 
@@ -250,17 +737,56 @@
                 if (data.error) {
                     document.getElementById('results').innerHTML = 
                         `<p style="color: red;">Error: ${data.error}</p>`;
+                    document.getElementById('promptTemplate').style.display = 'none';
                     return;
                 }
                 
                 let resultsHtml = `<p><strong>Processed Query:</strong> ${data.processed_query}</p>`;
+                
+                // Display extracted keywords
+                if (data.keywords && data.keywords.length > 0) {
+                    resultsHtml += `<div><strong>Extracted Keywords:</strong> `;
+                    data.keywords.forEach((keyword, index) => {
+                        resultsHtml += `<span class="keyword" style="margin-right: 5px; padding: 2px 5px; background-color: #f0f0f0; border-radius: 3px;">${keyword}</span>`;
+                    });
+                    resultsHtml += `</div>`;
+                }
+                
+                // Display extracted URL links
+                if (data.prompt_data && data.prompt_data.relevant_links && data.prompt_data.relevant_links.length > 0) {
+                    resultsHtml += `<div><strong>Relevant Links:</strong></div><ul>`;
+                    data.prompt_data.relevant_links.forEach(link => {
+                        resultsHtml += `<li><a href="${link}" target="_blank">${link}</a></li>`;
+                    });
+                    resultsHtml += `</ul>`;
+                }
+                
                 resultsHtml += `<ol>`;
                 
                 data.results.forEach(result => {
+                    const matchBadges = [];
+                    if (result.has_keyword_match) {
+                        matchBadges.push('<span style="margin-right: 5px; padding: 2px 5px; background-color: #e6f7ff; border-radius: 3px;">Keyword Match</span>');
+                    }
+                    if (result.has_url_match) {
+                        matchBadges.push('<span style="margin-right: 5px; padding: 2px 5px; background-color: #f6ffed; border-radius: 3px;">URL Match</span>');
+                    }
+                    
+                    let urlsHtml = '';
+                    if (result.urls && result.urls.length > 0) {
+                        urlsHtml = `<div><strong>URLs:</strong> `;
+                        result.urls.forEach(url => {
+                            urlsHtml += `<a href="${url}" target="_blank" style="margin-right: 10px;">${url}</a>`;
+                        });
+                        urlsHtml += `</div>`;
+                    }
+                    
                     resultsHtml += `
                         <li>
-                            <div><strong>Sentence:</strong> ${result.sentence}</div>
-                            <div><strong>Distance:</strong> ${result.distance.toFixed(4)}</div>
+                            <div>${matchBadges.join('')}</div>
+                            <div><strong>Content:</strong> ${result.sentence}</div>
+                            <div><strong>Similarity:</strong> ${result.distance.toFixed(4)}</div>
+                            ${urlsHtml}
                         </li>
                     `;
                 });
@@ -268,15 +794,102 @@
                 resultsHtml += `</ol>`;
                 document.getElementById('results').innerHTML = resultsHtml;
                 
+                // Display prompt template
+                if (data.prompt_data && data.prompt_data.prompt_template) {
+                    document.getElementById('promptText').value = data.prompt_data.prompt_template;
+                    
+                    if (document.getElementById('showPrompt').checked) {
+                        document.getElementById('promptTemplate').style.display = 'block';
+                    } else {
+                        document.getElementById('promptTemplate').style.display = 'none';
+                    }
+                } else {
+                    document.getElementById('promptTemplate').style.display = 'none';
+                }
+                
             } catch (error) {
                 document.getElementById('results').innerHTML = 
                     `<p style="color: red;">Error: ${error.message}</p>`;
+                document.getElementById('promptTemplate').style.display = 'none';
             }
+        });
+        
+        // Show/hide prompt template
+        document.getElementById('showPrompt').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('promptTemplate').style.display = 'block';
+            } else {
+                document.getElementById('promptTemplate').style.display = 'none';
+            }
+        });
+        
+        // Copy prompt template
+        document.getElementById('copyPrompt').addEventListener('click', function() {
+            const promptText = document.getElementById('promptText');
+            promptText.select();
+            document.execCommand('copy');
+            
+            // Show success message
+            const originalText = this.textContent;
+            this.textContent = 'Copied!';
+            setTimeout(() => {
+                this.textContent = originalText;
+            }, 2000);
         });
         
         // Auto-check status when page loads
         window.addEventListener('load', () => {
             document.getElementById('checkStatus').click();
+        });
+
+        // Generate Answer
+        document.getElementById('generateAnswer').addEventListener('click', async () => {
+            const queryText = document.getElementById('queryTextLLM').value.trim();
+            const topK = parseInt(document.getElementById('topKLLM').value);
+            const contextSize = parseInt(document.getElementById('contextSizeLLM').value);
+            const model = document.getElementById('modelName').value.trim();
+            
+            if (!queryText) {
+                document.getElementById('llmAnswer').innerHTML = 
+                    `<p style="color: red;">Please enter a query</p>`;
+                return;
+            }
+            
+            try {
+                document.getElementById('llmAnswer').innerHTML = 
+                    `<p>Generating answer, please wait...</p>`;
+                
+                const response = await fetch(`${API_URL}/generate-answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: queryText,
+                        top_k: topK,
+                        context_size: contextSize,
+                        model: model
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('llmAnswer').innerHTML = 
+                        `<p style="color: red;">Error: ${data.error}</p>`;
+                    return;
+                }
+                
+                // Display the answer
+                document.getElementById('llmAnswer').innerHTML = data.answer;
+                
+                // Display the prompt template used
+                document.getElementById('promptTextLLM').value = data.prompt_template;
+                
+            } catch (error) {
+                document.getElementById('llmAnswer').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
         });
     </script>
 </body>
