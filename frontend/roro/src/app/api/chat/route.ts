@@ -1,30 +1,35 @@
+import axios from 'axios';
 import { CreateMessage } from '@/db';
-import { createDeepSeek } from '@ai-sdk/deepseek';
-import { streamText } from 'ai';
-
-// Allow streaming responses up to 20 seconds
-export const maxDuration = 20;
-
-const qwen_turbo = createDeepSeek({
-    apiKey: process.env.Try_API_KEY,
-    baseURL: process.env.BASE_URL
-})
 
 export async function POST(req: Request) {
   const { messages, model, chat_id, chat_user_id } = await req.json();
-
-  // deposit user's messages to the database
-  const lastMessage = messages[messages.length - 1]
-  await CreateMessage(chat_id, lastMessage.content, lastMessage.role)
-
-  const result = streamText({
-    model: qwen_turbo('qwen-turbo'),
-    system: 'You are a helpful assistant.',
-    messages,
-    onFinish: async (result) => {
-      await CreateMessage(chat_id, result.text, 'assistant')
-    }
-  });
-
-  return result.toDataStreamResponse();
+  
+  // 取出最后一条用户消息
+  const lastMessage = messages[messages.length - 1];
+  
+  // 保存用户消息到数据库
+  await CreateMessage(chat_id, lastMessage.content, lastMessage.role);
+  
+  // 调用旧项目回答生成接口
+  let answer;
+  try {
+    const response = await axios.post('http://localhost:5000/api/generate-answer', {
+      query: lastMessage.content,
+      top_k: 12,
+      context_size: 5,
+      model: 'qwen-plus' // 根据需要传入旧项目能识别的模型名称
+    });
+    
+    // 旧项目返回的回答一般在 response.data.answer 中
+    answer = response.data.answer;
+  } catch (error) {
+    console.error('调用旧项目回答生成接口时出错:', error);
+    return new Response('Error generating answer', { status: 500 });
+  }
+  
+  // 保存助手回复到数据库
+  await CreateMessage(chat_id, answer, 'assistant');
+  
+  // 返回生成的回答
+  return new Response(answer, { headers: { 'Content-Type': 'text/plain' } });
 }

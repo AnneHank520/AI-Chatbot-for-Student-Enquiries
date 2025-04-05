@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import axios from "axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -13,6 +13,9 @@ export default function Home() {
   const router = useRouter();
   const [chatId, setChatId] = useState<string | null>(null);
   const pendingMessageRef = useRef<string>("");
+
+  // 新增状态：控制轮询是否启用
+  const [pollingEnabled, setPollingEnabled] = useState(true);
 
   // 创建聊天 Mutation：只负责创建聊天记录，不保存消息
   const { mutate: createChat } = useMutation({
@@ -25,6 +28,8 @@ export default function Home() {
     onSuccess: (res) => {
       const newChatId = res.data.id;
       setChatId(newChatId);
+      // 每次新消息发送前启动轮询
+      setPollingEnabled(true);
       if (pendingMessageRef.current) {
         sendChat({
           chatId: Number(newChatId),
@@ -50,13 +55,36 @@ export default function Home() {
       return axios.post("/api/chat", payload);
     },
     onSuccess: () => {
+      // 发送消息后重新启动轮询，等待新回复
+      setPollingEnabled(true);
       queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
     },
   });
 
+  // 新增查询：获取聊天历史消息（轮询控制）
+  const { data: messagesData } = useQuery({
+    queryKey: ["messages", chatId],
+    queryFn: () =>
+      axios.post("/api/get-messages", { chat_id: chatId }),
+    enabled: !!chatId,
+    refetchInterval: pollingEnabled ? 3000 : false,
+  });
+
+  // 监听 messagesData 变化，若最新消息为 assistant，则停止轮询
+  useEffect(() => {
+    if (messagesData && messagesData.data && messagesData.data.length > 0) {
+      const lastMsg = messagesData.data[messagesData.data.length - 1];
+      if (lastMsg.role === "assistant") {
+        setPollingEnabled(false);
+      }
+    }
+  }, [messagesData]);
+
   // 处理“发送”按钮点击：调用 /api/chat 发送用户消息
   const handleSubmit = () => {
     if (input.trim() === "") return;
+    // 每次发送新消息前启动轮询
+    setPollingEnabled(true);
     if (!chatId) {
       pendingMessageRef.current = input;
       createChat();
@@ -159,6 +187,8 @@ export default function Home() {
 
   // 处理选项动作
   const handleOptionAction = (selectedText: string) => {
+    // 启动轮询等待新回复
+    setPollingEnabled(true);
     if (!chatId) {
       pendingMessageRef.current = selectedText;
       createChat();
@@ -189,6 +219,31 @@ export default function Home() {
             />
           ))}
         </div>
+        {/* 显示消息列表（如果有 chatId 时） */}
+        {chatId && messagesData && messagesData.data && (
+          <div className="mt-4">
+            {messagesData.data.map((msg: any) => (
+              <div
+                key={msg.id || msg.content}
+                className={`rounded-lg flex flex-row gap-2 ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}
+              >
+                {msg.role === "assistant" && (
+                  <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
+                    R
+                  </div>
+                )}
+                <p className={`inline-block p-2 rounded-lg ${msg.role === "assistant" ? "bg-white" : "bg-[#7FCD89]"}`}>
+                  {msg.content}
+                </p>
+                {msg.role !== "assistant" && (
+                  <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                    U
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="bg-white flex flex-col items-center mt-4 shadow-lg border-[1px] border-gray-300 h-32 rounded-lg">
           <textarea 
             className="bg-white w-full rounded-lg p-3 h-30 focus:outline-none"
