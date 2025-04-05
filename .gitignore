@@ -1,6 +1,5 @@
-# 忽略 Sentence Transformer 预训练模型
-sentence_transformer.model/
 
-# 忽略所有 PDF 文件
+sentence_transformer.model/
 *.pdf
 data/pdfs/
+__pycache__/

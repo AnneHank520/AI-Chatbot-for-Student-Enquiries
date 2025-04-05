@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from query_process import preprocess_query, Query_processor
+from .query_process import preprocess_query, Query_processor
 import faiss
 import numpy as np
 import pickle
@@ -14,14 +14,14 @@ sentences_path = os.path.abspath("../../data/processed_texts/sentences.pkl")
 index = faiss.read_index(index_path)
 sentences = pickle.load(open(sentences_path, "rb"))
 
-def retrieve_top_k_documents(query, k=5):
+def retrieve_top_k_documents(query, top_k=5):
 
     query_processed = preprocess_query(query) 
     query_vector = Query_processor.encode(query_processed)
 
     query_vector = np.array([query_vector], dtype=np.float32)
     
-    distances, indices = index.search(query_vector, k)
+    distances, indices = index.search(query_vector, top_k)
     results = [(sentences[idx], distances[0][i]) for i, idx in enumerate(indices[0])]
     return results
 
