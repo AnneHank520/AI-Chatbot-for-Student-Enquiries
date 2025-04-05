@@ -257,6 +257,7 @@
         // Check Status
         document.getElementById('checkStatus').addEventListener('click', async () => {
             try {
+                // API CALL: GET /api/status - Retrieves the API status information
                 const response = await fetch(`${API_URL}/status`);
                 const data = await response.json();
                 document.getElementById('statusResult').innerHTML = 
@@ -285,6 +286,7 @@
                 document.getElementById('processResult').innerHTML = 
                     `<p>Processing PDF, please wait...</p>`;
                 
+                // API CALL: POST /api/process-pdf - Processes a PDF file and adds to vector database
                 const response = await fetch(`${API_URL}/process-pdf`, {
                     method: 'POST',
                     body: formData
@@ -302,8 +304,7 @@
         // List Uploaded Files
         document.getElementById('listFiles').addEventListener('click', async () => {
             try {
-                // This is a simple implementation that lists files from a static endpoint
-                // In a real application, you would need to implement this endpoint on your server
+                // API CALL: GET /api/list-files - Lists PDF files in the uploads directory
                 const response = await fetch(`${API_URL}/list-files`);
                 
                 // If the endpoint doesn't exist, we'll simulate it with a fallback
@@ -353,6 +354,7 @@
                 document.getElementById('reprocessResult').innerHTML = 
                     `<p>Reprocessing PDF, please wait...</p>`;
                 
+                // API CALL: POST /api/reprocess-pdf - Reprocesses an already uploaded PDF file
                 const response = await fetch(`${API_URL}/reprocess-pdf`, {
                     method: 'POST',
                     headers: {
@@ -391,6 +393,7 @@
                 document.getElementById('deleteResult').innerHTML = 
                     `<p>Deleting content, please wait...</p>`;
                 
+                // API CALL: POST /api/delete-pdf-content - Deletes content from a specific PDF file
                 const response = await fetch(`${API_URL}/delete-pdf-content`, {
                     method: 'POST',
                     headers: {
@@ -440,6 +443,7 @@
                 document.getElementById('dbStatsResult').innerHTML = 
                     `<p>Fetching database statistics...</p>`;
                 
+                // API CALL: GET /api/status - Retrieves database statistics
                 const response = await fetch(`${API_URL}/status`);
                 const data = await response.json();
                 
@@ -485,6 +489,7 @@
                     `<p>Analyzing content sources...</p>`;
                 
                 // First get the status to check if we have a database
+                // API CALL: GET /api/status - Checks if database is loaded
                 const statusResponse = await fetch(`${API_URL}/status`);
                 const statusData = await statusResponse.json();
                 
@@ -494,9 +499,7 @@
                     return;
                 }
                 
-                // Fetch all sources from the sentences in the database
-                // Since we don't have a dedicated endpoint for this, we'll make a simple query
-                // to get the data and analyze it client-side
+                // API CALL: POST /api/query - Gets data to analyze sources
                 const queryResponse = await fetch(`${API_URL}/query`, {
                     method: 'POST',
                     headers: {
@@ -545,6 +548,7 @@
                 }
                 
                 // Also check the PDF files available in the uploads directory
+                // API CALL: GET /api/list-files - Gets list of PDF files
                 const filesResponse = await fetch(`${API_URL}/list-files`);
                 if (filesResponse.ok) {
                     const filesData = await filesResponse.json();
@@ -610,6 +614,7 @@
                 document.getElementById('extractResult').innerHTML = 
                     `<p>Extracting content from URL, please wait...</p>`;
                 
+                // API CALL: POST /api/extract-url-content - Extracts content from a URL
                 const response = await fetch(`${API_URL}/extract-url-content`, {
                     method: 'POST',
                     headers: {
@@ -673,6 +678,7 @@
                 document.getElementById('addUrlResult').innerHTML = 
                     `<p>Processing URL and adding to database, please wait...</p>`;
                 
+                // API CALL: POST /api/add-url-to-index - Adds URL content to the vector database
                 const response = await fetch(`${API_URL}/add-url-to-index`, {
                     method: 'POST',
                     headers: {
@@ -720,6 +726,7 @@
                 document.getElementById('results').innerHTML = 
                     `<p>Searching, please wait...</p>`;
                 
+                // API CALL: POST /api/query - Searches for relevant content based on the query
                 const response = await fetch(`${API_URL}/query`, {
                     method: 'POST',
                     headers: {
@@ -859,6 +866,7 @@
                 document.getElementById('llmAnswer').innerHTML = 
                     `<p>Generating answer, please wait...</p>`;
                 
+                // API CALL: POST /api/generate-answer - Generates answer using LLM based on the query and retrieved context
                 const response = await fetch(`${API_URL}/generate-answer`, {
                     method: 'POST',
                     headers: {
