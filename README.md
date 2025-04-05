@@ -1,29 +1,29 @@
 [![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=18242497&assignment_repo_type=AssignmentRepo)
-# PDF Retrieval API Environment Installation Guide
+# Rekro Document Management System
 
-This document provides detailed instructions for installing the PDF Retrieval API environment using the `environment.yml` file.
+A comprehensive document management system with PDF processing, URL extraction, and vector database capabilities.
 
-## Prerequisites
+## Project Structure
 
-- Install [Anaconda](https://www.anaconda.com/download/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
-- Ensure you have sufficient disk space on your system (at least 2GB)
+- `frontend/`: Contains the user interface and admin interface
+  - `roro-admin/`: Admin dashboard for managing PDFs and URLs
+  - `roro/`: User interface for document search and interaction
+- `backend/`: Contains API services and data processing modules
+  - `api/`: RESTful API endpoints (All backend functionality has been integrated here)
+  - `retrieval/`: Vector database and search functionality (Legacy code - not in use)
+  - `data_processing/`: PDF and URL content processing (Legacy code - not in use)
 
-## Installation Steps
 
-### 1. Copy Project Files
+## Environment Setup
 
-First, copy the project files to a directory on the target host. Make sure to include the following files:
-- `environment.yml` (environment configuration file)
-- `api.py` and other related code files
+### Backend Environment Setup (Python)
 
-### 2. Create and Activate Conda Environment
+#### Using Conda (Recommended)
 
-Open a terminal (Anaconda Prompt on Windows or terminal on Linux/macOS), then execute the following commands:
+1. Install [Anaconda](https://www.anaconda.com/download/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+2. Create and activate the environment from the provided file:
 
 ```bash
-# Navigate to the project directory
-cd path/to/project/directory
-
 # Create a new environment using environment.yml
 conda env create -f environment.yml
 
@@ -31,11 +31,7 @@ conda env create -f environment.yml
 conda activate 9900proj
 ```
 
-> **Note**: The environment creation process may take several minutes, depending on your network speed and computer performance.
-
-### 3. Verify Installation
-
-After installation is complete, verify that the environment is correctly installed:
+3. Verify your installation:
 
 ```bash
 # Check Python version
@@ -49,30 +45,143 @@ pip list | grep sentence-transformers
 pip list | grep faiss
 ```
 
-### 4. Create Necessary Directories
+#### Using Pip
 
-Ensure you create the directories required by the API:
+If you prefer not to use Conda, you can use pip:
 
 ```bash
-# Create uploads and models directories in the project directory
+# Create a virtual environment
+python -m venv venv
+
+# Activate the environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Download required spaCy model
+python -m spacy download en_core_web_sm
+```
+
+### Frontend Environment Setup (Node.js)
+
+1. Install [Node.js](https://nodejs.org/) (version 18 or higher)
+2. Install dependencies for the admin dashboard:
+
+```bash
+cd ./frontend/roro-admin
+npm install
+```
+
+3. Install dependencies for the user interface:
+
+```bash
+cd ./frontend/roro
+npm install
+```
+
+## Running the Application
+
+### Backend API Service
+
+1. First, ensure you have created the necessary directories:
+
+```bash
 mkdir -p uploads models
 ```
 
-### 5. Run the API
-
-Now you can start the API service:
+2. Start the API service:
 
 ```bash
+cd ./backend/api
 python api.py
 ```
 
-The API will run at http://localhost:5000.
+The API will run on `http://localhost:5000` by default.
+
+### Frontend - Admin Dashboard
+
+1. Configure the development server port in `frontend/roro-admin/package.json` (this should already be set to 3001):
+
+```json
+"scripts": {
+  "dev": "next dev -p 3001",
+  "start": "next start -p 3001"
+}
+```
+
+2. Run the development server:
+
+```bash
+cd ./frontend/roro-admin
+npm run dev
+```
+
+The admin dashboard will be accessible at `http://localhost:3001`.
+
+### Frontend - User Interface
+
+1. Run the development server (this should run on port 3000 by default):
+
+```bash
+cd ./frontend/roro
+npm run dev
+```
+
+The user interface will be accessible at `http://localhost:3000`.
+
+## Core Features
+
+### Admin Dashboard
+- System status monitoring
+- PDF document management (upload, process, delete)
+- URL content extraction and indexing
+
+### User Interface
+- Document search and retrieval
+- Content viewing and interaction
+
+## API Documentation
+
+The system provides the following key API endpoints:
+
+- `GET /api/status`: Check system status and database information
+- `POST /api/process-pdf`: Upload and process PDF files
+- `GET /api/list-files`: List available PDF files
+- `POST /api/reprocess-pdf`: Reprocess existing PDF files
+- `POST /api/delete-pdf-content`: Delete PDF content from database
+- `POST /api/query`: Search PDF content
+- `POST /api/extract-url-content`: Extract URL content
+- `POST /api/add-url-to-index`: Add URL content to database
+
+For more details, see the documentation in `backend/api/api_usage.md`.
+
+## Frontend Dependencies
+
+The frontend applications are built with:
+
+### Core Dependencies
+- Next.js: ^15.2.1 - React framework
+- React: ^18.2.0 - UI library
+- TypeScript: ^5.4.5 - Type checking
+
+### UI Components
+- Tailwind CSS: ^3.4.1 - Utility-first CSS framework
+- Heroicons: ^2.1.1 - SVG icons
+
+### Data Management
+- Tanstack Query (React Query): ^5.28.0 - Data fetching and state management
+- Axios: ^1.7.1 - HTTP client
 
 ## Troubleshooting
 
-### Package Conflicts or Installation Failures
+### Backend Issues
 
-If you encounter package conflicts or installation failures when creating the environment:
+#### Package Conflicts
+If you encounter package conflicts during installation:
 
 ```bash
 # Try creating the environment with the --no-deps option
@@ -84,9 +193,8 @@ pip install flask flask-cors werkzeug numpy pymupdf spacy sentence-transformers 
 python -m spacy download en_core_web_sm
 ```
 
-### GPU Support
-
-If your host has an NVIDIA GPU and you want to use GPU acceleration:
+#### GPU Support
+If you have an NVIDIA GPU and want to use GPU acceleration:
 
 ```bash
 # After activating the environment
@@ -100,9 +208,27 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 pip install faiss-gpu
 ```
 
-> **Note**: Please adjust the cu118 part in the PyTorch installation URL according to your CUDA version.
+### Frontend Issues
 
-### Operating System Considerations
+#### Node Modules Not Found
+If you get errors about missing modules:
+
+```bash
+# Delete node_modules and reinstall
+rm -rf node_modules
+npm install
+```
+
+#### Port Already in Use
+If port 3000 or 3001 is already in use, modify the port in the start script in package.json:
+
+```json
+"scripts": {
+  "dev": "next dev -p [new_port]"
+}
+```
+
+## Operating System Considerations
 
 - **Windows**: Make sure Visual C++ Redistributable is installed
 - **Linux**: You may need to install additional system libraries (such as libgl1-mesa-glx)
