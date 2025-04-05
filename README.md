@@ -228,6 +228,44 @@ If port 3000 or 3001 is already in use, modify the port in the start script in p
 }
 ```
 
+#### Command 'next' Not Found Error
+
+If you encounter an error message like `'next' is not recognized as an internal or external command, operable program or batch file` when trying to run `npm run dev`, this indicates that Next.js executable cannot be found. Follow these steps to resolve this issue:
+
+1. This usually happens when node modules are not properly installed or the Next.js package is missing. Reinstall the dependencies:
+
+```bash
+# Navigate to the frontend directory with the issue
+cd ./frontend/roro-admin  # or cd ./frontend/roro
+
+# Reinstall all dependencies
+npm install
+```
+
+2. After reinstallation, try running the development server again:
+
+```bash
+npm run dev
+```
+
+3. If the problem persists, you can use npx to run Next.js directly:
+
+```bash
+npx next dev
+```
+
+4. Alternatively, you can modify the scripts in package.json to use npx:
+
+```json
+"scripts": {
+  "dev": "npx next dev",
+  "build": "npx next build",
+  "start": "npx next start"
+}
+```
+
+This issue typically occurs after cloning the repository to a new environment or when node_modules becomes corrupted.
+
 ## Operating System Considerations
 
 - **Windows**: Make sure Visual C++ Redistributable is installed
