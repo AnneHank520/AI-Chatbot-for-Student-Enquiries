@@ -226,6 +226,10 @@ def build_indices(sentences):
     
     print(f"URL index built: {len(url_index)} URLs")
     print(f"Keyword index built: {len(keywords_index)} keywords")
+    
+@app.route("/")
+def home():
+    return {"message": "Rekro backend is alive. Use /api/* for endpoints."}
 
 @app.route('/api/process-pdf', methods=['POST'])
 def process_pdf():
