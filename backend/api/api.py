@@ -63,6 +63,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 import requests
 from bs4 import BeautifulSoup
+import time
 
 app = Flask(__name__)
 CORS(app)  # Enable cross-origin request support
@@ -147,6 +148,17 @@ def text_to_vector(text):
 
 def create_vector_db(sentences_vector):
     """Create vector database"""
+    # 检查向量数组是否为空
+    if not sentences_vector:
+        print(f"[{time.strftime('%H:%M:%S')}] Warning: Empty sentences vector array provided to create_vector_db")
+        # 如果向量数组为空，使用模型的维度创建一个空的向量数据库
+        if sentence_transformer is None:
+            load_or_create_model()
+        vector_dimension = sentence_transformer.get_sentence_embedding_dimension()
+        print(f"[{time.strftime('%H:%M:%S')}] Creating empty vector database with dimension {vector_dimension}")
+        db = faiss.IndexFlatL2(vector_dimension)
+        return db
+    
     vector_dimension = sentences_vector[0].shape[0]
     db = faiss.IndexFlatL2(vector_dimension)
     all_vectors = np.array(sentences_vector, dtype=np.float32)
@@ -220,6 +232,10 @@ def process_pdf():
     """Process uploaded PDF file, extract text and add to vector index"""
     global vector_db, sentences, url_index, keywords_index
     
+    # Record start time
+    start_time = time.time()
+    print(f"[{time.strftime('%H:%M:%S')}] Process PDF operation started")
+    
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     
@@ -230,55 +246,112 @@ def process_pdf():
     if file and file.filename.endswith('.pdf'):
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        print(f"[{time.strftime('%H:%M:%S')}] Step 1: Saving uploaded file: {filename}")
+        file_save_start = time.time()
         file.save(file_path)
+        file_save_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 1: File saved in {file_save_end - file_save_start:.2f} seconds")
         
         try:
             # Extract text
+            print(f"[{time.strftime('%H:%M:%S')}] Step 2: Extracting text from PDF...")
+            extract_start = time.time()
             pdf_text = extract_text_from_pdf(file_path)
+            extract_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 2: Text extraction completed in {extract_end - extract_start:.2f} seconds. Extracted text length: {len(pdf_text)}")
+            
+            if len(pdf_text) == 0:
+                print(f"[{time.strftime('%H:%M:%S')}] Warning: No text extracted from PDF")
+                return jsonify({'error': 'No text extracted from PDF'}), 400
             
             # Preprocess text
+            print(f"[{time.strftime('%H:%M:%S')}] Step 3: Preprocessing text into sentences...")
+            preprocess_start = time.time()
             pdf_sentences = preprocess_text(pdf_text)
+            preprocess_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 3: Preprocessing completed in {preprocess_end - preprocess_start:.2f} seconds. Generated {len(pdf_sentences)} sentences")
+            
+            if len(pdf_sentences) == 0:
+                print(f"[{time.strftime('%H:%M:%S')}] Warning: No sentences generated from PDF")
+                return jsonify({'error': 'No sentences generated from PDF text'}), 400
             
             # Ensure model is loaded
+            print(f"[{time.strftime('%H:%M:%S')}] Step 4: Ensuring model is loaded...")
             if sentence_transformer is None:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 4: Loading model...")
+                model_start = time.time()
                 load_or_create_model()
+                model_end = time.time()
+                print(f"[{time.strftime('%H:%M:%S')}] Step 4: Model loaded in {model_end - model_start:.2f} seconds")
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 4: Model already loaded")
             
             # Ensure vector database and sentences are loaded
+            print(f"[{time.strftime('%H:%M:%S')}] Step 5: Loading vector database...")
             if vector_db is None:
+                db_load_start = time.time()
                 vector_db = load_vector_db()
                 if vector_db is None:
                     # If no existing database, create a new one
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 5: No existing database found, creating a new one")
                     vector_db = faiss.IndexFlatL2(sentence_transformer.get_sentence_embedding_dimension())
+                db_load_end = time.time()
+                print(f"[{time.strftime('%H:%M:%S')}] Step 5: Vector database loaded/created in {db_load_end - db_load_start:.2f} seconds")
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 5: Vector database already loaded")
             
+            print(f"[{time.strftime('%H:%M:%S')}] Step 6: Loading sentences...")
             if not sentences:
+                sentences_load_start = time.time()
                 sentences_path = os.path.join(MODEL_FOLDER, 'sentences.json')
                 if os.path.exists(sentences_path):
                     with open(sentences_path, 'r', encoding='utf-8') as f:
                         sentences = json.load(f)
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 6: Loaded {len(sentences)} sentences from file")
                 else:
                     sentences = []
-                    
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 6: No sentences file found, starting with empty list")
+                sentences_load_end = time.time()
+                print(f"[{time.strftime('%H:%M:%S')}] Step 6: Sentences loaded in {sentences_load_end - sentences_load_start:.2f} seconds")
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 6: Sentences already loaded ({len(sentences)} sentences)")
+            
             # Load URL and keyword indices if needed
+            print(f"[{time.strftime('%H:%M:%S')}] Step 7: Loading indices...")
+            indices_load_start = time.time()
             if not url_index:
                 url_index_path = os.path.join(MODEL_FOLDER, 'url_index.json')
                 if os.path.exists(url_index_path):
                     with open(url_index_path, 'r', encoding='utf-8') as f:
                         url_index = json.load(f)
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 7: Loaded URL index with {len(url_index)} entries")
                 else:
                     url_index = {}
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 7: No URL index found, starting with empty dict")
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 7: URL index already loaded ({len(url_index)} entries)")
             
             if not keywords_index:
                 keywords_index_path = os.path.join(MODEL_FOLDER, 'keywords_index.json')
                 if os.path.exists(keywords_index_path):
                     with open(keywords_index_path, 'r', encoding='utf-8') as f:
                         keywords_index = json.load(f)
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 7: Loaded keywords index with {len(keywords_index)} entries")
                 else:
                     keywords_index = {}
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 7: No keywords index found, starting with empty dict")
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 7: Keywords index already loaded ({len(keywords_index)} entries)")
+            indices_load_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 7: Indices loaded in {indices_load_end - indices_load_start:.2f} seconds")
             
             # Get current sentences count for indexing
             start_idx = len(sentences)
             
             # Convert to enriched format with URLs and keywords
+            print(f"[{time.strftime('%H:%M:%S')}] Step 8: Creating enriched sentences...")
+            enrich_start = time.time()
             enriched_sentences = []
             for idx, sentence in enumerate(pdf_sentences):
                 full_idx = start_idx + idx
@@ -301,15 +374,41 @@ def process_pdf():
                 
                 enriched_sentences.append(enriched_sentence)
                 sentences.append(enriched_sentence)  # Add to global sentences
+                
+                if (idx + 1) % 1000 == 0:
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 8: Processed {idx + 1}/{len(pdf_sentences)} sentences")
+            
+            enrich_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 8: Enrichment completed in {enrich_end - enrich_start:.2f} seconds. Added {len(enriched_sentences)} enriched sentences.")
             
             # Vectorize new sentences
-            sentences_vector = [text_to_vector(sentence['text']) for sentence in enriched_sentences]
-            sentences_vector_np = np.array(sentences_vector, dtype=np.float32)
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: Vectorizing new sentences...")
+            vectorize_start = time.time()
             
-            # Add vectors to database
+            # Add batch processing for vectorization
+            sentences_vector = []
+            batch_size = 100
+            for i in range(0, len(enriched_sentences), batch_size):
+                batch_end = min(i + batch_size, len(enriched_sentences))
+                print(f"[{time.strftime('%H:%M:%S')}] Step 9: Vectorizing batch {i//batch_size + 1}/{(len(enriched_sentences)-1)//batch_size + 1} ({i}-{batch_end})")
+                batch = [s['text'] for s in enriched_sentences[i:batch_end]]
+                batch_vectors = [text_to_vector(text) for text in batch]
+                sentences_vector.extend(batch_vectors)
+            
+            vectorize_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: Vectorization completed in {vectorize_end - vectorize_start:.2f} seconds")
+            
+            # Convert to numpy array and add to database
+            print(f"[{time.strftime('%H:%M:%S')}] Step 10: Adding vectors to database...")
+            add_start = time.time()
+            sentences_vector_np = np.array(sentences_vector, dtype=np.float32)
             vector_db.add(sentences_vector_np)
+            add_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 10: Vectors added to database in {add_end - add_start:.2f} seconds")
             
             # Update indices
+            print(f"[{time.strftime('%H:%M:%S')}] Step 11: Updating indices...")
+            indices_update_start = time.time()
             for idx, sentence in enumerate(enriched_sentences):
                 full_idx = start_idx + idx
                 
@@ -325,25 +424,45 @@ def process_pdf():
                     if keyword not in keywords_index:
                         keywords_index[keyword] = []
                     keywords_index[keyword].append(full_idx)
+                
+                if (idx + 1) % 1000 == 0:
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 11: Updated indices for {idx + 1}/{len(enriched_sentences)} sentences")
+            
+            indices_update_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 11: Indices updated in {indices_update_end - indices_update_start:.2f} seconds")
             
             # Save updated data
+            print(f"[{time.strftime('%H:%M:%S')}] Step 12: Saving data to disk...")
+            save_start = time.time()
+            
             # Save vector database
+            print(f"[{time.strftime('%H:%M:%S')}] Step 12: Saving vector database...")
             db_path = save_vector_db(vector_db)
             
             # Save sentences to file
+            print(f"[{time.strftime('%H:%M:%S')}] Step 12: Saving sentences...")
             sentences_path = os.path.join(MODEL_FOLDER, 'sentences.json')
             with open(sentences_path, 'w', encoding='utf-8') as f:
                 json.dump(sentences, f, ensure_ascii=False, indent=2)
             
             # Save URL index
+            print(f"[{time.strftime('%H:%M:%S')}] Step 12: Saving URL index...")
             url_index_path = os.path.join(MODEL_FOLDER, 'url_index.json')
             with open(url_index_path, 'w', encoding='utf-8') as f:
                 json.dump(url_index, f, ensure_ascii=False, indent=2)
                 
             # Save keywords index
+            print(f"[{time.strftime('%H:%M:%S')}] Step 12: Saving keywords index...")
             keywords_index_path = os.path.join(MODEL_FOLDER, 'keywords_index.json')
             with open(keywords_index_path, 'w', encoding='utf-8') as f:
                 json.dump(keywords_index, f, ensure_ascii=False, indent=2)
+            
+            save_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 12: All data saved in {save_end - save_start:.2f} seconds")
+            
+            end_time = time.time()
+            total_time = end_time - start_time
+            print(f"[{time.strftime('%H:%M:%S')}] Process PDF operation completed in {total_time:.2f} seconds")
             
             return jsonify({
                 'message': 'PDF processed successfully and added to existing index',
@@ -352,13 +471,17 @@ def process_pdf():
                 'total_sentences': len(sentences),
                 'vector_db_path': db_path,
                 'url_count': len(url_index),
-                'keywords_count': len(keywords_index)
+                'keywords_count': len(keywords_index),
+                'processing_time_seconds': total_time
             })
             
         except Exception as e:
+            end_time = time.time()
+            total_time = end_time - start_time
+            print(f"[{time.strftime('%H:%M:%S')}] ERROR: Process PDF operation failed after {total_time:.2f} seconds")
             import traceback
             traceback.print_exc()
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': str(e), 'processing_time_seconds': total_time}), 500
     
     return jsonify({'error': 'Invalid file format'}), 400
 
@@ -640,6 +763,10 @@ def reprocess_pdf():
     """Reprocess an already uploaded PDF file and add to vector database"""
     global vector_db, sentences, url_index, keywords_index
     
+    # Record start time
+    start_time = time.time()
+    print(f"[{time.strftime('%H:%M:%S')}] Reprocess operation started")
+    
     data = request.json
     if not data or 'filename' not in data:
         # If no filename specified, try to process the first PDF file in uploads directory
@@ -650,6 +777,7 @@ def reprocess_pdf():
     else:
         filename = data['filename']
     
+    print(f"[{time.strftime('%H:%M:%S')}] Processing file: {filename}")
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     
     if not os.path.exists(file_path):
@@ -657,65 +785,113 @@ def reprocess_pdf():
     
     # Check if we should remove previous entries for this file - default is True
     remove_previous = data.get('remove_previous', True)
+    print(f"[{time.strftime('%H:%M:%S')}] Remove previous entries: {remove_previous}")
     
     try:
-        print(f"Reprocessing file: {file_path}")
+        print(f"[{time.strftime('%H:%M:%S')}] Step 1: Starting reprocessing file: {file_path}")
         
         # Extract text
+        print(f"[{time.strftime('%H:%M:%S')}] Step 2: Extracting text from PDF...")
+        extract_start = time.time()
         pdf_text = extract_text_from_pdf(file_path)
-        print(f"Extracted text length: {len(pdf_text)}")
+        extract_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 2: Text extraction completed in {extract_end - extract_start:.2f} seconds. Extracted text length: {len(pdf_text)}")
         
         if len(pdf_text) == 0:
             return jsonify({'error': 'No text extracted from PDF'}), 400
         
         # Preprocess text
+        print(f"[{time.strftime('%H:%M:%S')}] Step 3: Preprocessing text into sentences...")
+        preprocess_start = time.time()
         pdf_sentences = preprocess_text(pdf_text)
+        preprocess_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 3: Preprocessing completed in {preprocess_end - preprocess_start:.2f} seconds. Generated {len(pdf_sentences)} sentences")
         
         # Ensure model is loaded
+        print(f"[{time.strftime('%H:%M:%S')}] Step 4: Ensuring model is loaded...")
         if sentence_transformer is None:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 4: Loading model...")
+            model_start = time.time()
             load_or_create_model()
+            model_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 4: Model loaded in {model_end - model_start:.2f} seconds")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 4: Model already loaded")
         
         # Ensure vector database and sentences are loaded
+        print(f"[{time.strftime('%H:%M:%S')}] Step 5: Loading vector database...")
         if vector_db is None:
+            db_load_start = time.time()
             vector_db = load_vector_db()
             if vector_db is None:
                 # If no existing database, create a new one
+                print(f"[{time.strftime('%H:%M:%S')}] Step 5: No existing database found, creating a new one")
                 vector_db = faiss.IndexFlatL2(sentence_transformer.get_sentence_embedding_dimension())
+            db_load_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 5: Vector database loaded/created in {db_load_end - db_load_start:.2f} seconds")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 5: Vector database already loaded")
         
+        print(f"[{time.strftime('%H:%M:%S')}] Step 6: Loading sentences...")
         if not sentences:
+            sentences_load_start = time.time()
             sentences_path = os.path.join(MODEL_FOLDER, 'sentences.json')
             if os.path.exists(sentences_path):
                 with open(sentences_path, 'r', encoding='utf-8') as f:
                     sentences = json.load(f)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 6: Loaded {len(sentences)} sentences from file")
             else:
                 sentences = []
+                print(f"[{time.strftime('%H:%M:%S')}] Step 6: No sentences file found, starting with empty list")
+            sentences_load_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 6: Sentences loaded in {sentences_load_end - sentences_load_start:.2f} seconds")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 6: Sentences already loaded ({len(sentences)} sentences)")
         
         # Load URL and keyword indices if needed
+        print(f"[{time.strftime('%H:%M:%S')}] Step 7: Loading indices...")
+        indices_load_start = time.time()
         if not url_index:
             url_index_path = os.path.join(MODEL_FOLDER, 'url_index.json')
             if os.path.exists(url_index_path):
                 with open(url_index_path, 'r', encoding='utf-8') as f:
                     url_index = json.load(f)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 7: Loaded URL index with {len(url_index)} entries")
             else:
                 url_index = {}
+                print(f"[{time.strftime('%H:%M:%S')}] Step 7: No URL index found, starting with empty dict")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 7: URL index already loaded ({len(url_index)} entries)")
         
         if not keywords_index:
             keywords_index_path = os.path.join(MODEL_FOLDER, 'keywords_index.json')
             if os.path.exists(keywords_index_path):
                 with open(keywords_index_path, 'r', encoding='utf-8') as f:
                     keywords_index = json.load(f)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 7: Loaded keywords index with {len(keywords_index)} entries")
             else:
                 keywords_index = {}
+                print(f"[{time.strftime('%H:%M:%S')}] Step 7: No keywords index found, starting with empty dict")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 7: Keywords index already loaded ({len(keywords_index)} entries)")
+        indices_load_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 7: Indices loaded in {indices_load_end - indices_load_start:.2f} seconds")
         
         # If requested, remove previous entries for this file
+        print(f"[{time.strftime('%H:%M:%S')}] Step 8: Finding entries to remove...")
         indices_to_remove = []
         if remove_previous:
             # Find all sentences from this file
+            find_indices_start = time.time()
             for idx, sentence in enumerate(sentences):
                 if isinstance(sentence, dict) and sentence.get('metadata', {}).get('source') == 'pdf' and sentence.get('metadata', {}).get('filename') == filename:
                     indices_to_remove.append(idx)
+            find_indices_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 8: Found {len(indices_to_remove)} entries to remove in {find_indices_end - find_indices_start:.2f} seconds")
             
             # Remove from url_index and keywords_index
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: Updating URL and keywords indices...")
+            indices_update_start = time.time()
             for url, indices in list(url_index.items()):
                 url_index[url] = [idx for idx in indices if idx not in indices_to_remove]
                 if not url_index[url]:
@@ -725,22 +901,58 @@ def reprocess_pdf():
                 keywords_index[keyword] = [idx for idx in indices if idx not in indices_to_remove]
                 if not keywords_index[keyword]:
                     del keywords_index[keyword]
+            indices_update_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: Indices updated in {indices_update_end - indices_update_start:.2f} seconds")
             
             # Note: We can't easily remove vectors from FAISS index, so we'll rebuild the index
             # This is a workaround - in production you might want to use a different approach
             if indices_to_remove:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 10: Rebuilding sentences list and vector database...")
+                rebuild_start = time.time()
+                
                 # Get all sentences that are not from this file
                 updated_sentences = [s for i, s in enumerate(sentences) if i not in indices_to_remove]
                 sentences = updated_sentences
+                print(f"[{time.strftime('%H:%M:%S')}] Step 10: Updated sentences list, now contains {len(sentences)} entries")
                 
                 # Rebuild FAISS index
-                sentences_vector = [text_to_vector(s['text']) for s in sentences]
-                vector_db = create_vector_db(sentences_vector)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 10: Vectorizing {len(sentences)} sentences...")
+                vectorize_start = time.time()
+                
+                # Add batch processing for vectorization
+                sentences_vector = []
+                batch_size = 100
+                for i in range(0, len(sentences), batch_size):
+                    batch_end = min(i + batch_size, len(sentences))
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 10: Vectorizing batch {i//batch_size + 1}/{(len(sentences)-1)//batch_size + 1} ({i}-{batch_end})")
+                    batch = [s['text'] for s in sentences[i:batch_end]]
+                    batch_vectors = [text_to_vector(text) for text in batch]
+                    sentences_vector.extend(batch_vectors)
+                
+                vectorize_end = time.time()
+                print(f"[{time.strftime('%H:%M:%S')}] Step 10: Vectorization completed in {vectorize_end - vectorize_start:.2f} seconds")
+                
+                print(f"[{time.strftime('%H:%M:%S')}] Step 10: Creating vector database...")
+                if sentences_vector:
+                    db_create_start = time.time()
+                    vector_db = create_vector_db(sentences_vector)
+                    db_create_end = time.time()
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 10: Vector database created in {db_create_end - db_create_start:.2f} seconds")
+                else:
+                    print(f"[{time.strftime('%H:%M:%S')}] Step 10: No sentences to vectorize, creating empty database")
+                    vector_db = faiss.IndexFlatL2(sentence_transformer.get_sentence_embedding_dimension())
+                
+                rebuild_end = time.time()
+                print(f"[{time.strftime('%H:%M:%S')}] Step 10: Database rebuilding completed in {rebuild_end - rebuild_start:.2f} seconds")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 8-10: Skipping removal of previous entries")
         
         # Get current sentences count for indexing
         start_idx = len(sentences)
         
         # Convert to enriched format with URLs and keywords
+        print(f"[{time.strftime('%H:%M:%S')}] Step 11: Creating enriched sentences...")
+        enrich_start = time.time()
         enriched_sentences = []
         for idx, sentence in enumerate(pdf_sentences):
             full_idx = start_idx + idx
@@ -763,15 +975,42 @@ def reprocess_pdf():
             
             enriched_sentences.append(enriched_sentence)
             sentences.append(enriched_sentence)  # Add to global sentences
+            
+            if (idx + 1) % 1000 == 0:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 11: Processed {idx + 1}/{len(pdf_sentences)} sentences")
+        
+        enrich_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 11: Enrichment completed in {enrich_end - enrich_start:.2f} seconds. Added {len(enriched_sentences)} enriched sentences.")
         
         # Vectorize new sentences
-        sentences_vector = [text_to_vector(sentence['text']) for sentence in enriched_sentences]
+        print(f"[{time.strftime('%H:%M:%S')}] Step 12: Vectorizing new sentences...")
+        vectorize_start = time.time()
+        
+        # Add batch processing for new sentence vectorization
+        sentences_vector = []
+        batch_size = 100
+        for i in range(0, len(enriched_sentences), batch_size):
+            batch_end = min(i + batch_size, len(enriched_sentences))
+            print(f"[{time.strftime('%H:%M:%S')}] Step 12: Vectorizing batch {i//batch_size + 1}/{(len(enriched_sentences)-1)//batch_size + 1} ({i}-{batch_end})")
+            batch = [s['text'] for s in enriched_sentences[i:batch_end]]
+            batch_vectors = [text_to_vector(text) for text in batch]
+            sentences_vector.extend(batch_vectors)
+        
+        vectorize_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 12: New sentences vectorization completed in {vectorize_end - vectorize_start:.2f} seconds")
+        
+        print(f"[{time.strftime('%H:%M:%S')}] Step 13: Converting to numpy array and adding to database...")
         sentences_vector_np = np.array(sentences_vector, dtype=np.float32)
         
         # Add vectors to database
+        add_start = time.time()
         vector_db.add(sentences_vector_np)
+        add_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 13: Added vectors to database in {add_end - add_start:.2f} seconds")
         
         # Update indices
+        print(f"[{time.strftime('%H:%M:%S')}] Step 14: Updating indices...")
+        indices_update_start = time.time()
         for idx, sentence in enumerate(enriched_sentences):
             full_idx = start_idx + idx
             
@@ -787,25 +1026,45 @@ def reprocess_pdf():
                 if keyword not in keywords_index:
                     keywords_index[keyword] = []
                 keywords_index[keyword].append(full_idx)
+                
+            if (idx + 1) % 1000 == 0:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 14: Updated indices for {idx + 1}/{len(enriched_sentences)} sentences")
+        
+        indices_update_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 14: Indices updated in {indices_update_end - indices_update_start:.2f} seconds")
         
         # Save updated data
+        print(f"[{time.strftime('%H:%M:%S')}] Step 15: Saving data to disk...")
+        save_start = time.time()
+        
         # Save vector database
+        print(f"[{time.strftime('%H:%M:%S')}] Step 15: Saving vector database...")
         db_path = save_vector_db(vector_db)
         
         # Save sentences to file
+        print(f"[{time.strftime('%H:%M:%S')}] Step 15: Saving sentences...")
         sentences_path = os.path.join(MODEL_FOLDER, 'sentences.json')
         with open(sentences_path, 'w', encoding='utf-8') as f:
             json.dump(sentences, f, ensure_ascii=False, indent=2)
         
         # Save URL index
+        print(f"[{time.strftime('%H:%M:%S')}] Step 15: Saving URL index...")
         url_index_path = os.path.join(MODEL_FOLDER, 'url_index.json')
         with open(url_index_path, 'w', encoding='utf-8') as f:
             json.dump(url_index, f, ensure_ascii=False, indent=2)
             
         # Save keywords index
+        print(f"[{time.strftime('%H:%M:%S')}] Step 15: Saving keywords index...")
         keywords_index_path = os.path.join(MODEL_FOLDER, 'keywords_index.json')
         with open(keywords_index_path, 'w', encoding='utf-8') as f:
             json.dump(keywords_index, f, ensure_ascii=False, indent=2)
+        
+        save_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 15: All data saved in {save_end - save_start:.2f} seconds")
+        
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"[{time.strftime('%H:%M:%S')}] Reprocess operation completed in {total_time:.2f} seconds")
         
         return jsonify({
             'message': 'PDF reprocessed successfully and added to index',
@@ -815,13 +1074,17 @@ def reprocess_pdf():
             'previous_entries_removed': len(indices_to_remove) if remove_previous else 0,
             'vector_db_path': db_path,
             'url_count': len(url_index),
-            'keywords_count': len(keywords_index)
+            'keywords_count': len(keywords_index),
+            'processing_time_seconds': total_time
         })
         
     except Exception as e:
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"[{time.strftime('%H:%M:%S')}] ERROR: Reprocess operation failed after {total_time:.2f} seconds")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e), 'processing_time_seconds': total_time}), 500
 
 @app.route('/api/list-files', methods=['GET'])
 def list_files():
@@ -1284,52 +1547,87 @@ def delete_pdf_content():
     """Delete all content from a specific PDF file from the vector database"""
     global vector_db, sentences, url_index, keywords_index
     
+    # Record start time
+    start_time = time.time()
+    print(f"[{time.strftime('%H:%M:%S')}] Delete PDF content operation started")
+    
     data = request.json
     if not data or 'filename' not in data:
         return jsonify({'error': 'No filename provided'}), 400
     
     filename = data['filename']
+    print(f"[{time.strftime('%H:%M:%S')}] Processing deletion for file: {filename}")
     
     try:
         # Load sentences if not already loaded
+        print(f"[{time.strftime('%H:%M:%S')}] Step 1: Loading sentences...")
+        sentences_load_start = time.time()
         if not sentences:
             sentences_path = os.path.join(MODEL_FOLDER, 'sentences.json')
             if os.path.exists(sentences_path):
                 with open(sentences_path, 'r', encoding='utf-8') as f:
                     sentences = json.load(f)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 1: Loaded {len(sentences)} sentences from file")
             else:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 1: No sentences file found")
                 return jsonify({'error': 'No sentences found in database'}), 404
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 1: Sentences already loaded ({len(sentences)} sentences)")
+        sentences_load_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 1: Sentences loaded in {sentences_load_end - sentences_load_start:.2f} seconds")
         
         # Load URL and keyword indices if needed
+        print(f"[{time.strftime('%H:%M:%S')}] Step 2: Loading indices...")
+        indices_load_start = time.time()
         if not url_index:
             url_index_path = os.path.join(MODEL_FOLDER, 'url_index.json')
             if os.path.exists(url_index_path):
                 with open(url_index_path, 'r', encoding='utf-8') as f:
                     url_index = json.load(f)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 2: Loaded URL index with {len(url_index)} entries")
             else:
                 url_index = {}
+                print(f"[{time.strftime('%H:%M:%S')}] Step 2: No URL index found, starting with empty dict")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 2: URL index already loaded ({len(url_index)} entries)")
         
         if not keywords_index:
             keywords_index_path = os.path.join(MODEL_FOLDER, 'keywords_index.json')
             if os.path.exists(keywords_index_path):
                 with open(keywords_index_path, 'r', encoding='utf-8') as f:
                     keywords_index = json.load(f)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 2: Loaded keywords index with {len(keywords_index)} entries")
             else:
                 keywords_index = {}
+                print(f"[{time.strftime('%H:%M:%S')}] Step 2: No keywords index found, starting with empty dict")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 2: Keywords index already loaded ({len(keywords_index)} entries)")
+        indices_load_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 2: Indices loaded in {indices_load_end - indices_load_start:.2f} seconds")
         
         # Find all sentences from this file
+        print(f"[{time.strftime('%H:%M:%S')}] Step 3: Finding sentences to remove...")
+        find_indices_start = time.time()
         indices_to_remove = []
         for idx, sentence in enumerate(sentences):
             if isinstance(sentence, dict) and sentence.get('metadata', {}).get('source') == 'pdf' and sentence.get('metadata', {}).get('filename') == filename:
                 indices_to_remove.append(idx)
+        find_indices_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 3: Found {len(indices_to_remove)} entries to remove in {find_indices_end - find_indices_start:.2f} seconds")
         
         if not indices_to_remove:
+            print(f"[{time.strftime('%H:%M:%S')}] No content found for file {filename}")
             return jsonify({
                 'message': f'No content found for file {filename}',
                 'indices_removed': 0
             })
         
         # Remove from url_index and keywords_index
+        print(f"[{time.strftime('%H:%M:%S')}] Step 4: Updating URL and keywords indices...")
+        indices_update_start = time.time()
+        urls_before = len(url_index)
+        keywords_before = len(keywords_index)
+        
         for url, indices in list(url_index.items()):
             url_index[url] = [idx for idx in indices if idx not in indices_to_remove]
             if not url_index[url]:
@@ -1340,74 +1638,143 @@ def delete_pdf_content():
             if not keywords_index[keyword]:
                 del keywords_index[keyword]
         
+        indices_update_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 4: Indices updated in {indices_update_end - indices_update_start:.2f} seconds")
+        print(f"[{time.strftime('%H:%M:%S')}] Step 4: URL index entries: {urls_before} -> {len(url_index)}")
+        print(f"[{time.strftime('%H:%M:%S')}] Step 4: Keywords index entries: {keywords_before} -> {len(keywords_index)}")
+        
         # Remove sentences and rebuild vector database
+        print(f"[{time.strftime('%H:%M:%S')}] Step 5: Rebuilding sentences list...")
+        rebuild_start = time.time()
         updated_sentences = [s for i, s in enumerate(sentences) if i not in indices_to_remove]
+        print(f"[{time.strftime('%H:%M:%S')}] Step 5: Updated sentences list, now contains {len(updated_sentences)} entries (was {len(sentences)})")
+        rebuild_end = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] Step 5: Sentences list rebuilt in {rebuild_end - rebuild_start:.2f} seconds")
         
         # Check if we have sentences left
         if updated_sentences:
             sentences = updated_sentences
             
             # Ensure model is loaded
+            print(f"[{time.strftime('%H:%M:%S')}] Step 6: Ensuring model is loaded...")
             if sentence_transformer is None:
+                model_start = time.time()
                 load_or_create_model()
+                model_end = time.time()
+                print(f"[{time.strftime('%H:%M:%S')}] Step 6: Model loaded in {model_end - model_start:.2f} seconds")
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 6: Model already loaded")
                 
             # Rebuild FAISS index
-            sentences_vector = [text_to_vector(s['text']) for s in sentences]
-            vector_db = create_vector_db(sentences_vector)
+            print(f"[{time.strftime('%H:%M:%S')}] Step 7: Vectorizing {len(sentences)} sentences...")
+            vectorize_start = time.time()
+            
+            # Add batch processing for vectorization
+            sentences_vector = []
+            batch_size = 100
+            for i in range(0, len(sentences), batch_size):
+                batch_end = min(i + batch_size, len(sentences))
+                print(f"[{time.strftime('%H:%M:%S')}] Step 7: Vectorizing batch {i//batch_size + 1}/{(len(sentences)-1)//batch_size + 1} ({i}-{batch_end})")
+                batch = [s['text'] for s in sentences[i:batch_end]]
+                batch_vectors = [text_to_vector(text) for text in batch]
+                sentences_vector.extend(batch_vectors)
+            
+            vectorize_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 7: Vectorization completed in {vectorize_end - vectorize_start:.2f} seconds")
+            
+            print(f"[{time.strftime('%H:%M:%S')}] Step 8: Creating vector database...")
+            if sentences_vector:
+                db_create_start = time.time()
+                vector_db = create_vector_db(sentences_vector)
+                db_create_end = time.time()
+                print(f"[{time.strftime('%H:%M:%S')}] Step 8: Vector database created in {db_create_end - db_create_start:.2f} seconds")
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] Step 8: No sentences to vectorize, creating empty database")
+                vector_db = faiss.IndexFlatL2(sentence_transformer.get_sentence_embedding_dimension())
+            
+            # Save all data
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: Saving data to disk...")
+            save_start = time.time()
             
             # Save vector database
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: Saving vector database...")
             db_path = save_vector_db(vector_db)
             
             # Save sentences to file
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: Saving sentences...")
             sentences_path = os.path.join(MODEL_FOLDER, 'sentences.json')
             with open(sentences_path, 'w', encoding='utf-8') as f:
                 json.dump(sentences, f, ensure_ascii=False, indent=2)
             
             # Save URL index
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: Saving URL index...")
             url_index_path = os.path.join(MODEL_FOLDER, 'url_index.json')
             with open(url_index_path, 'w', encoding='utf-8') as f:
                 json.dump(url_index, f, ensure_ascii=False, indent=2)
                 
             # Save keywords index
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: Saving keywords index...")
             keywords_index_path = os.path.join(MODEL_FOLDER, 'keywords_index.json')
             with open(keywords_index_path, 'w', encoding='utf-8') as f:
                 json.dump(keywords_index, f, ensure_ascii=False, indent=2)
+            
+            save_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: All data saved in {save_end - save_start:.2f} seconds")
         else:
             # If no sentences left, reset everything
+            print(f"[{time.strftime('%H:%M:%S')}] Step 6-8: No sentences left, resetting all data structures")
             sentences = []
             vector_db = None
             url_index = {}
             keywords_index = {}
             
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: Removing index files...")
+            remove_start = time.time()
+            
             # Remove index files
             sentences_path = os.path.join(MODEL_FOLDER, 'sentences.json')
             if os.path.exists(sentences_path):
                 os.remove(sentences_path)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 9: Removed sentences file")
             
             db_path = os.path.join(MODEL_FOLDER, 'vector_index.bin')
             if os.path.exists(db_path):
                 os.remove(db_path)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 9: Removed vector database file")
                 
             url_index_path = os.path.join(MODEL_FOLDER, 'url_index.json')
             if os.path.exists(url_index_path):
                 os.remove(url_index_path)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 9: Removed URL index file")
                 
             keywords_index_path = os.path.join(MODEL_FOLDER, 'keywords_index.json')
             if os.path.exists(keywords_index_path):
                 os.remove(keywords_index_path)
+                print(f"[{time.strftime('%H:%M:%S')}] Step 9: Removed keywords index file")
+            
+            remove_end = time.time()
+            print(f"[{time.strftime('%H:%M:%S')}] Step 9: All files removed in {remove_end - remove_start:.2f} seconds")
+        
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"[{time.strftime('%H:%M:%S')}] Delete PDF content operation completed in {total_time:.2f} seconds")
         
         return jsonify({
             'message': f'Content from file {filename} deleted successfully',
             'indices_removed': len(indices_to_remove),
             'sentences_remaining': len(sentences),
             'url_count': len(url_index),
-            'keywords_count': len(keywords_index)
+            'keywords_count': len(keywords_index),
+            'processing_time_seconds': total_time
         })
         
     except Exception as e:
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"[{time.strftime('%H:%M:%S')}] ERROR: Delete PDF content operation failed after {total_time:.2f} seconds")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e), 'processing_time_seconds': total_time}), 500
 
 if __name__ == '__main__':
     # Preload model and vector database
