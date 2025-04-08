@@ -171,6 +171,8 @@ export default function Page() {
         <div className="flex flex-row items-center justify-between w-full h-12 mb-2 bg-white">
           <div></div>
           <div 
+            role="button"
+            aria-label="send"
             className="flex items-center justify-center mr-4 p-1 rounded-full bg-[#244E48] cursor-pointer"
             onClick={handleSubmit}
           >
