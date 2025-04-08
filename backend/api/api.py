@@ -716,12 +716,20 @@ You are an intelligent information assistant that answers user questions based o
 2. When retrieved information is insufficient, you may supplement with your own knowledge, but clearly distinguish between retrieved content and your knowledge contributions
 3. Consider retrieved content as highly reliable information sources, with priority over your own knowledge
 4. If retrieved results conflict with your knowledge, defer to the retrieved results
-5. Reference URLs at appropriate points in your response when relevant
+5. **YOU MUST REFERENCE URLS IN YOUR RESPONSE - THIS IS MANDATORY**
 6. Use concise, clear language and maintain readability in your responses
 7. For region-specific information (such as Australian regulations, services, etc.), consider retrieved information as more accurate sources
 
 # Output Format Instructions
 Your response must be polite, professional, and conversational in tone. Begin your answer with a brief acknowledgment of the question in a polite way. After providing a comprehensive answer, include 2-3 relevant follow-up questions that might help the user explore the topic further.
+
+**IMPORTANT URL INTEGRATION INSTRUCTIONS:**
+- You MUST include at least 2-3 relevant URLs from the Relevant Links section.
+- Format URLs using proper markdown syntax: [descriptive anchor text](full URL).
+- Do NOT just list URLs at the end - integrate them naturally within your answer.
+- Make the anchor text descriptive and relevant to the linked resource.
+- Highlight the URL links by using **bold** in your anchor text when appropriate.
+- Example: For more information, visit **[Australian Student Visa Requirements](https://example.com)**.
 
 # User Question
 {query}
@@ -733,7 +741,7 @@ Your response must be polite, professional, and conversational in tone. Begin yo
 ## Relevant Links
 {chr(10).join(formatted_links if formatted_links else ['No relevant links found'])}
 
-Please answer the user's question based on the retrieved information and your knowledge base. Your answer should be direct, comprehensive, and accurate. Pay particular attention to specific details and data provided in the retrieved text, while using your knowledge to organize and supplement the information appropriately. If referencing URLs, please use markdown format for links.
+Please answer the user's question based on the retrieved information and your knowledge base. Make sure your answer is direct, comprehensive, and accurate. Pay particular attention to specific details and data provided in the retrieved text, while using your knowledge to organize and supplement the information appropriately. REMEMBER: URLs MUST be properly formatted as clickable links using markdown and integrated naturally within your answer text.
 """
     
     return template
@@ -1288,7 +1296,7 @@ def generate_answer_api():
             completion = client.chat.completions.create(
                 model=model,  # Use the model name passed in
                 messages=[
-                    {'role': 'system', 'content': 'You are a helpful assistant. Be polite and professional in your responses. Begin with a brief acknowledgment of the question, provide a comprehensive answer, and end with 2-3 relevant follow-up questions to help the user explore the topic further.'},
+                    {'role': 'system', 'content': 'You are a helpful assistant. Be polite and professional in your responses. Begin with a brief acknowledgment of the question, provide a comprehensive answer, and end with 2-3 relevant follow-up questions to help the user explore the topic further. Make sure to format URLs using markdown syntax [descriptive text](URL) and highlight important links by using bold formatting for the anchor text like **[text](URL)**. Always integrate URLs naturally within your answer text, not just listing them at the end.'},
                     {'role': 'user', 'content': prompt_template}
                 ]
             )
