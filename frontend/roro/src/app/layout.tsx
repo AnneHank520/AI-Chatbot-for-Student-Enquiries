@@ -39,8 +39,9 @@ export default function RootLayout({
         >
 
           {/* 顶部导航区域 */}
-          <header className="w-full bg-[#183728] sticky top-0 text-white px-6 py-4 h-20.5 z-50 shrink-0">
-            <nav className="flex items-center justify-between">
+          
+          <header className="w-full bg-[#183728] sticky top-0 text-white px-6 py-4 h-20.5 z-50 shrink-0 [@media(max-width:1261px)]:h-[65px]">
+            <nav className="flex items-center justify-between w-full h-full">
               
               {/* 左侧 Logo/标题 */}
               <img
@@ -51,46 +52,46 @@ export default function RootLayout({
               </img>
               
               {/* 右侧菜单 */}
-              <div className="flex space-x-8.5 mr-8.5">
+              <div className="hidden md:flex space-x-8.5 mr-8.5">
                 {/* Home */}
                 <a href="#" className="flex flex-col items-center hover">
-                  <HomeIcon className="w-7 h-7 mb-1" />
-                  <span className="text-base">Home</span>
+                  <HomeIcon className="w-7 h-7 mb-1 [@media(max-width:1261px)]:w-[20px]" />
+                  <span className="text-base [@media(max-width:1261px)]:h-[16px]">Home</span>
                 </a>
 
                 {/* Events */}
                 <a href="#" className="flex flex-col items-center hover">
-                  <CalendarIcon className="w-7 h-7 mb-1" />
+                  <CalendarIcon className="w-7 h-7 mb-1 [@media(max-width:1261px)]:w-[20px]" />
                   <span className="text-base">Events</span>
                 </a>
 
                 {/* Connections */}
                 <a href="#" className="flex flex-col items-center hover">
-                  <PlusIcon className="w-7 h-7 mb-1" />
+                  <PlusIcon className="w-7 h-7 mb-1 [@media(max-width:1261px)]:w-[20px]" />
                   <span className="text-base">Connections</span>
                 </a>
 
                 {/* Chat（高亮为黄色） */}
                 <a href="#" className="flex flex-col items-center">
-                  <ChatBubbleOvalLeftEllipsisIcon className="w-7 h-7 mb-1 text-yellow-400" />
+                  <ChatBubbleOvalLeftEllipsisIcon className="w-7 h-7 mb-1 text-yellow-400 [@media(max-width:1261px)]:w-[20px]" />
                   <span className="text-base text-yellow-400">Chat</span>
                 </a>
 
                 {/* User */}
                 <a href="#" className="flex flex-col items-center hover">
-                  <UserIcon className="w-7 h-7 mb-1" />
+                  <UserIcon className="w-7 h-7 mb-1 [@media(max-width:1261px)]:w-[20px]" />
                   <span className="text-base">User</span>
                 </a>
               </div>
+
             </nav>
           </header>
 
           {/* 中间主体：左侧侧边栏 + 右侧主内容 */}
-          <div className="flex overflow-hidden bg-neutral-100"
-            style={{height: "calc(100vh - 82px)"}}
+          <div className="flex overflow-hidden bg-neutral-100 h-[calc(100vh-82px)] [@media(max-width:1261px)]:h-[calc(100vh-65px)]"
             >
             {/* 左侧侧边栏，包含你的 Navibar */}
-            <aside className="w-3/7 bg-neutral-100 p-0 overflow-hidden">
+            <aside className="hidden lg:block w-3/7 bg-neutral-100 p-0 " style={{ marginLeft: '100px' }}>
               <Navibar />
             </aside>
 
@@ -101,7 +102,8 @@ export default function RootLayout({
           </div>
 
           {/* 底部区域 */}
-          <footer className="relative bg-[#183728] text-white px-6 py-27.5 shrink-0">
+          
+          <footer className="relative bg-[#183728] text-white px-6 py-27.5 shrink-0 hidden md:block">
             <div className="flex items-center">
               {/* 左侧 Logo */}
               <img
@@ -146,6 +148,40 @@ export default function RootLayout({
                 </a>
               </div>
             </div>            
+          </footer>
+
+          <footer className="md:hidden fixed bottom-0 left-0 right-0 bg-[#183728] text-white h-56px flex items-center justify-between w-full " >
+            <div className="flex md:hidden space-x-8.5 mr-8.5 flex items-center justify-between w-full ">
+                {/* Home */}
+                <a href="#" className="flex flex-col items-center hover">
+                  <HomeIcon className="w-7 h-7 mb-1 [@media(max-width:1260px)]:w-[20px]" />
+                  <span className="text-base [@media(max-width:1260px)]:h-[16px]">Home</span>
+                </a>
+
+                {/* Events */}
+                <a href="#" className="flex flex-col items-center hover">
+                  <CalendarIcon className="w-7 h-7 mb-1 [@media(max-width:1260px)]:w-[20px]" />
+                  <span className="text-base">Events</span>
+                </a>
+
+                {/* Connections */}
+                <a href="#" className="flex flex-col items-center hover">
+                  <PlusIcon className="w-7 h-7 mb-1 [@media(max-width:1260px)]:w-[20px]" />
+                  <span className="text-base">Connections</span>
+                </a>
+
+                {/* Chat（高亮为黄色） */}
+                <a href="#" className="flex flex-col items-center">
+                  <ChatBubbleOvalLeftEllipsisIcon className="w-7 h-7 mb-1 text-yellow-400 [@media(max-width:1260px)]:w-[20px]" />
+                  <span className="text-base text-yellow-400">Chat</span>
+                </a>
+
+                {/* User */}
+                <a href="#" className="flex flex-col items-center hover">
+                  <UserIcon className="w-7 h-7 mb-1 [@media(max-width:1260px)]:w-[20px]" />
+                  <span className="text-base">User</span>
+                </a>
+              </div>
           </footer>
         </body>
       </html>

@@ -29,6 +29,11 @@ conda env create -f environment.yml
 
 # Activate the environment
 conda activate 9900proj
+
+Note: en_core_web_sm cannot be installed via environment.yml directly, you can install it using:
+# option 1:
+python -m spacy download en_core_web_sm
+
 ```
 
 3. Verify your installation:
@@ -90,7 +95,10 @@ npm install
 1. First, ensure you have created the necessary directories:
 
 ```bash
-mkdir -p uploads models
+cd ./backend/api
+mkdir -p uploads models # if you are using Linux or macOS
+mkdir uploads, models # if you are using Windows
+
 ```
 
 2. Start the API service:
