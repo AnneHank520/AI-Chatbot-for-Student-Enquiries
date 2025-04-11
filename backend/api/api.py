@@ -31,7 +31,7 @@ API endpoints:
 
 Usage:
 1. Start the API service: python api.py
-2. The API will run at http://localhost:5000
+2. The API will run at http://localhost:5001
 3. Access API endpoints using HTTP clients (browser, Postman, curl)
 
 Dependencies:
@@ -1796,4 +1796,4 @@ if __name__ == '__main__':
             sentences = json.load(f)
     
     # Start API service
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
