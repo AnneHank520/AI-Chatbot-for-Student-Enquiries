@@ -90,7 +90,9 @@ npm install
 
 ## Running the Application
 
-### Backend API Service
+### Option 1: Local Development (Without Docker)
+
+#### Backend API Service
 
 1. First, ensure you have created the necessary directories:
 
@@ -110,7 +112,7 @@ python api.py
 
 The API will run on `http://localhost:5000` by default.
 
-### Frontend - Admin Dashboard
+#### Frontend - Admin Dashboard
 
 1. Configure the development server port in `frontend/roro-admin/package.json` (this should already be set to 3001):
 
@@ -130,7 +132,7 @@ npm run dev
 
 The admin dashboard will be accessible at `http://localhost:3001`.
 
-### Frontend - User Interface
+#### Frontend - User Interface
 
 1. Run the development server (this should run on port 3000 by default):
 
@@ -140,6 +142,36 @@ npm run dev
 ```
 
 The user interface will be accessible at `http://localhost:3000`.
+
+
+### Option 2: Docker Deployment
+
+This project includes Docker support for simplified deployment.
+
+1. Build and Run the System
+At the project root:
+```bash
+docker compose up --build
+```
+This will:
+
+Build and start three services: backend, admin frontend, and user frontend
+
+Expose the following ports:
+
+`http://localhost:5000` → Backend API
+
+`http://localhost:3000` → User Interface
+
+`http://localhost:3001` → Admin Dashboard
+
+2. API Proxy Configuration for Docker
+In frontend/roro-admin/next.config.ts, make sure the API rewrite is pointing to the internal service name:
+```ts
+destination: 'http://rekro-backend:5000/api/:path*'
+```
+This ensures the frontend correctly connects to the backend via Docker's internal network.
+
 
 ## Core Features
 
