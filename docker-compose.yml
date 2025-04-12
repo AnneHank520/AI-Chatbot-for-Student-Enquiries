@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: rekro-backend
     ports:
-      - "5000:5000"
+      - "5001:5001"
     volumes:
       - ./uploads:/app/uploads
       - ./models:/app/models
@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile
     container_name: rekro-admin
     ports:
-      - "3001:3000"  # Next.js 启动时监听 3000
+      - "3001:3001"  
     restart: unless-stopped
     depends_on:
       - backend

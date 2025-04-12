@@ -1,0 +1,6 @@
+
+sentence_transformer.model/
+*.pdf
+data/pdfs/
+__pycache__/
+.idea/

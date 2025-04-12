@@ -29,5 +29,5 @@
     COPY --from=builder /roro/package-lock.json .
     COPY --from=builder /roro/drizzle.config.ts .
     
-    EXPOSE 3000
+    EXPOSE 3001
     CMD ["npm", "start"]
