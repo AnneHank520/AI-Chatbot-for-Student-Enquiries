@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   // 调用旧项目回答生成接口
   let answer;
   try {
-    const response = await axios.post('http://localhost:5000/api/generate-answer', {
+    const response = await axios.post('http://localhost:5001/api/generate-answer', {
       query: lastMessage.content,
       top_k: 12,
       context_size: 5,
