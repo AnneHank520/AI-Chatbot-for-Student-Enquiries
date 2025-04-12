@@ -14,7 +14,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://rekro-backend:5000/api/:path*',
+        destination: 'http://rekro-backend:5001/api/:path*',   // If you want to run this file locally, usehttp://localhost:5001/api/:path*
       },
     ];
   },
