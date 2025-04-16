@@ -38,12 +38,12 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} flex flex-col min-h-screen antialiased`}
         >
 
-          {/* 顶部导航区域 */}
+          {/* Top navigation area */}
           
           <header className="w-full bg-[#183728] sticky top-0 text-white px-6 py-4 h-20.5 z-50 shrink-0 [@media(max-width:1261px)]:h-[65px]">
             <nav className="flex items-center justify-between w-full h-full">
               
-              {/* 左侧 Logo/标题 */}
+              {/* Left Logo */}
               <img
                 src="/images/Logo - 1.svg" 
                 alt="reKro Logo"
@@ -51,7 +51,7 @@ export default function RootLayout({
               >
               </img>
               
-              {/* 右侧菜单 */}
+              {/* Right menu */}
               <div className="hidden md:flex space-x-8.5 mr-8.5">
                 {/* Home */}
                 <a href="#" className="flex flex-col items-center hover">
@@ -71,7 +71,7 @@ export default function RootLayout({
                   <span className="text-base">Connections</span>
                 </a>
 
-                {/* Chat（高亮为黄色） */}
+                {/* Chat（Highlighted in yellow） */}
                 <a href="#" className="flex flex-col items-center">
                   <ChatBubbleOvalLeftEllipsisIcon className="w-7 h-7 mb-1 text-yellow-400 [@media(max-width:1261px)]:w-[20px]" />
                   <span className="text-base text-yellow-400">Chat</span>
@@ -87,25 +87,25 @@ export default function RootLayout({
             </nav>
           </header>
 
-          {/* 中间主体：左侧侧边栏 + 右侧主内容 */}
+          {/* Middle body: left sidebar + right main content */}
           <div className="flex overflow-hidden bg-neutral-100 h-[calc(100vh-82px)] [@media(max-width:1261px)]:h-[calc(100vh-65px)]"
             >
-            {/* 左侧侧边栏，包含你的 Navibar */}
+            {/* The left sidebar, containing your Navibar */}
             <aside className="hidden lg:block w-3/7 bg-neutral-100 p-0 " style={{ marginLeft: '100px' }}>
               <Navibar />
             </aside>
 
-            {/* 右侧主内容区，渲染各个 page.tsx 的内容 */}
+            {/* The main content area on the right, which renders the content of each page.tsx */}
             <main className="w-4/7 flex-1 flex flex-col">
               {children}
             </main>
           </div>
 
-          {/* 底部区域 */}
+          {/* bottom area */}
           
           <footer className="relative bg-[#183728] text-white px-6 py-27.5 shrink-0 hidden md:block">
             <div className="flex items-center">
-              {/* 左侧 Logo */}
+              {/* Left Logo */}
               <img
                 src="/images/Logo - 1.svg"
                 alt="reKro Logo"
@@ -115,7 +115,7 @@ export default function RootLayout({
     
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex space-x-6">
-                {/* Instagram 图标 */}
+                {/* Instagram */}
                 <a href="#" aria-label="Instagram" className="hover:opacity-80">
                   <svg
                     className="w-18 h-18"
@@ -132,7 +132,7 @@ export default function RootLayout({
                   </svg>
                 </a>
 
-                {/* LinkedIn 图标 */}
+                {/* LinkedIn */}
                 <a href="#" aria-label="LinkedIn" className="hover:opacity-80">
                   <svg
                     className="w-18 h-18"
@@ -170,7 +170,7 @@ export default function RootLayout({
                   <span className="text-base">Connections</span>
                 </a>
 
-                {/* Chat（高亮为黄色） */}
+                {/* Chat（Highlighted in yellow） */}
                 <a href="#" className="flex flex-col items-center">
                   <ChatBubbleOvalLeftEllipsisIcon className="w-7 h-7 mb-1 text-yellow-400 [@media(max-width:1260px)]:w-[20px]" />
                   <span className="text-base text-yellow-400">Chat</span>
