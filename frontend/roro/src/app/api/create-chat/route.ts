@@ -9,18 +9,18 @@ export async function POST(req: Request) {
 
     if (!userId) {
         userId = crypto.randomUUID();
-        (await cookies()).set("userId", userId, { maxAge: 60 * 60 * 24 * 7 }); // 7 天有效
+        (await cookies()).set("userId", userId, { maxAge: 60 * 60 * 24 * 7 }); 
     }
 
     const existingChats = await getChats(userId);
-    // 假设对于同一 model，我们只保留一条聊天记录
+    // Let's assume that for the same model, we keep only one chat record
     const existingChat = existingChats?.find(chat => chat.model === model);
     if (existingChat) {
-        // 如果存在，直接返回已有聊天 id
+        // If it exists, return the existing chat id directly
         return new Response(JSON.stringify({ id: existingChat.id }), { status: 200 });
     }
 
-    // 如果不存在，则创建新聊天
+    // If it doesn't exist, create a new chat
     const newChat = await CreateChat(title, userId, model);
     return new Response(JSON.stringify({ id: newChat?.id }), { status: 200 });
 }
