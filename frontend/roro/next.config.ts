@@ -7,7 +7,7 @@ import type { NextConfig } from "next";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // 在生产环境下忽略 ESLint 错误
+    // Ignoring ESLint errors in a production environment
     ignoreDuringBuilds: true,
   },
 };
