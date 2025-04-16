@@ -33,23 +33,23 @@ const Navibar = (props: Props) => {
                     </div>
                 </div>
 
-                {/* Inbox 区域 */}
+                {/* Inbox */}
                 <div>
                     <h2 className="text-2xl font-semibold text-[#183728] mb-2">Inbox</h2>
-                    {/* 外层容器，带轻微阴影/圆角，包住联系人列表 */}
+                    {/* Outer container with slight shadow/rounded corners that wraps around the contact list */}
                     <div className="bg-white rounded-2xl shadow-sm p-3" 
                     onClick={() => {
                     router.push('/')
                     }}>
                         <ul className="space-y-2">
                             <li className="flex items-center space-x-3 p-3 rounded-2xl cursor-pointer border">
-                                {/* 头像 */}
+                                {/* avatar */}
                                 <div className="flex-shrink-0 h-18 w-18 rounded-full bg-gray-300 
                                 flex items-center justify-center text-white font-bold">
                                 R
                                 </div>
 
-                                {/* 用户信息 */}
+                                {/* user information */}
                                 <div>
                                     <p className="text-3xl">roro</p>
                                     <p className="text-sm text-gray-500">ChatbotAI of reKro</p>
