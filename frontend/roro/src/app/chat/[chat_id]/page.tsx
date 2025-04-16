@@ -13,23 +13,23 @@ export default function Page() {
   const router = useRouter();
   const queryClient = useQueryClient();
   
-  // 如果 params.chat_id 是数组，则取第一个元素，否则直接使用
+  // If params.chat_id is an array, take the first element, otherwise use it directly
   const initialChatId = (Array.isArray(params.chat_id) ? params.chat_id[0] : params.chat_id) || null;
   const [chatId, setChatId] = useState<string | null>(initialChatId);
   const [input, setInput] = useState("");
   const [model, setModel] = useState("deepseek");
   const pendingMessageRef = useRef<string>("");
-  // 控制是否轮询消息
+  // Controls whether messages are polled
   const [pollingEnabled, setPollingEnabled] = useState(true);
 
-  // 查询当前聊天信息，仅在 chatId 存在时启用
+  // Query current chat, enabled only when chatId exists
   const { data: chat } = useQuery({
     queryKey: ["chat", chatId],
     queryFn: () => axios.post("/api/get-chat", { chat_id: chatId }),
     enabled: !!chatId,
   });
 
-  // 查询聊天历史消息，refetchInterval 根据 pollingEnabled 控制
+  // Queries the chat history. refetchInterval is controlled by pollingEnabled.
   const { data: preMessages } = useQuery({
     queryKey: ["messages", chatId],
     queryFn: () =>
@@ -41,7 +41,7 @@ export default function Page() {
     refetchInterval: pollingEnabled ? 3000 : false,
   });
 
-  // 监听 preMessages 变化，若最后一条消息为 assistant 则停止轮询
+  // Listen for preMessages to change and stop polling if the last message is assistant.
   useEffect(() => {
     if (preMessages && preMessages.data && preMessages.data.length > 0) {
       const lastMsg = preMessages.data[preMessages.data.length - 1];
@@ -51,7 +51,7 @@ export default function Page() {
     }
   }, [preMessages]);
 
-  // 创建聊天 Mutation，与 Home 组件一致
+  // Creating a Chat Mutation, consistent with the Home component
   const { mutate: createChat } = useMutation({
     mutationFn: async () => {
       return axios.post("/api/create-chat", {
@@ -62,7 +62,7 @@ export default function Page() {
     onSuccess: (res) => {
       const newChatId = res.data.id;
       setChatId(newChatId);
-      // 发送新消息前启动轮询
+      // Polling before sending a new message
       setPollingEnabled(true);
       if (pendingMessageRef.current) {
         sendChat({
@@ -77,7 +77,7 @@ export default function Page() {
     },
   });
 
-  // 发送消息 Mutation，与 Home 组件一致
+  // Send message Mutation, consistent with Home component
   const { mutate: sendChat } = useMutation({
     mutationFn: async (vars: { chatId: number; content: string; role: string }) => {
       const payload = {
@@ -89,16 +89,16 @@ export default function Page() {
       return axios.post("/api/chat", payload);
     },
     onSuccess: () => {
-      // 发送消息后启动轮询，等待新的回复
+      // Starts polling after sending a message, waiting for a new reply
       setPollingEnabled(true);
       queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
     },
   });
 
-  // 处理消息发送逻辑
+  // Handling message sending logic
   const handleSubmit = () => {
     if (input.trim() === "") return;
-    // 每次发送消息前启动轮询
+    // Starts polling before each message is sent
     setPollingEnabled(true);
     if (!chatId) {
       pendingMessageRef.current = input;
@@ -109,7 +109,7 @@ export default function Page() {
     setInput("");
   };
 
-  // 聊天消息列表滚动到底部
+  // Chat message list scrolls to the bottom
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -161,7 +161,7 @@ export default function Page() {
 
       <div className="h-4"></div>
 
-      {/* 消息输入区域 */}
+      {/* message input area */}
       <div className="bg-white flex flex-col items-center mt-4 shadow-lg border-[1px] border-gray-300 h-32 rounded-lg w-7/8">
         <textarea 
           className="bg-white w-full rounded-lg p-3 h-30 focus:outline-none"
