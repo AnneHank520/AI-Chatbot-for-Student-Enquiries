@@ -3,10 +3,10 @@ import { CreateMessage } from "@/db";
   
 export async function POST(req: Request) {
   try {
-    // 从请求体中获取 chatId、content 和 role
+    // Get the chatId, content and role from the request body.
     const { chatId, content, role } = await req.json();
 
-    // 调用 CreateMessage 函数向数据库插入一条新消息
+    // Call the CreateMessage function to insert a new message into the database.
     const newMessage = await CreateMessage(chatId, content, role);
 
     if (!newMessage) {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 返回新消息数据
+    // Return new message data
     return new Response(JSON.stringify(newMessage), { status: 200 });
   } catch (error) {
     console.error("Error in /api/create-message", error);
