@@ -1,25 +1,25 @@
 # ----------------------
-# 第 1 阶段：构建阶段
+# Phase 1: build phase
 # ----------------------
     FROM node:20-alpine AS builder
 
     WORKDIR /app
     
-    # 复制 package.json 和 lock 文件
+    # Copy the package.json and lock files
     COPY package*.json ./
     COPY .env ./.env
-    # 安装依赖
+    # Installation of dependencies
     RUN npm install
     
-    # 复制所有项目文件
+    # Copy all project files
     COPY . .
     
-    # 构建生产版本
+    # Building the production version
     RUN npm run build
     
     
     # ----------------------
-    # 第 2 阶段：生产运行阶段
+    # Phase 2: Production run phase
     # ----------------------
     FROM node:20-alpine AS runner
     
@@ -27,18 +27,14 @@
     
     WORKDIR /app
     
-    # 拷贝构建产物和运行所需文件
+    # Copy the build product and the files needed to run it
     COPY --from=builder /app/package.json ./
     COPY --from=builder /app/package-lock.json ./
     COPY --from=builder /app/.next ./.next
     COPY --from=builder /app/public ./public
     COPY --from=builder /app/next.config.* ./
     COPY --from=builder /app/node_modules ./node_modules
-    
-    # 可选：如果你使用 src/ 目录作为页面入口
     COPY --from=builder /app/src ./src
-    
-    # 可选：复制配置文件
     COPY --from=builder /app/drizzle.config.ts ./
     COPY --from=builder /app/.env .env
     
