@@ -14,10 +14,10 @@ export default function Home() {
   const [chatId, setChatId] = useState<string | null>(null);
   const pendingMessageRef = useRef<string>("");
 
-  // 新增状态：控制轮询是否启用
+  // New status: Control polling enabled or not
   const [pollingEnabled, setPollingEnabled] = useState(true);
 
-  // 创建聊天 Mutation：只负责创建聊天记录，不保存消息
+  // Create Chat Mutation: only creates chat logs, does not save messages
   const { mutate: createChat } = useMutation({
     mutationFn: async () => {
       return axios.post("/api/create-chat", {
@@ -28,7 +28,7 @@ export default function Home() {
     onSuccess: (res) => {
       const newChatId = res.data.id;
       setChatId(newChatId);
-      // 每次新消息发送前启动轮询
+      // Starts polling before each new message is sent
       setPollingEnabled(true);
       if (pendingMessageRef.current) {
         sendChat({
@@ -43,7 +43,7 @@ export default function Home() {
     },
   });
 
-  // 发送消息 Mutation：统一调用 /api/chat，由后端处理用户消息的保存和 AI 回复
+  // Send message Mutation: unified call to /api/chat, backend handles user message saving and AI replies
   const { mutate: sendChat } = useMutation({
     mutationFn: async (vars: { chatId: number; content: string; role: string }) => {
       const payload = {
@@ -55,13 +55,13 @@ export default function Home() {
       return axios.post("/api/chat", payload);
     },
     onSuccess: () => {
-      // 发送消息后重新启动轮询，等待新回复
+      // Restart polling after sending a message and wait for a new reply
       setPollingEnabled(true);
       queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
     },
   });
 
-  // 新增查询：获取聊天历史消息（轮询控制）
+  // New query: Get chat history messages (polling control)
   const { data: messagesData } = useQuery({
     queryKey: ["messages", chatId],
     queryFn: () =>
@@ -70,7 +70,7 @@ export default function Home() {
     refetchInterval: pollingEnabled ? 3000 : false,
   });
 
-  // 监听 messagesData 变化，若最新消息为 assistant，则停止轮询
+  // Listen for changes to the messagesData and stop polling if the latest message is assistant.
   useEffect(() => {
     if (messagesData && messagesData.data && messagesData.data.length > 0) {
       const lastMsg = messagesData.data[messagesData.data.length - 1];
@@ -80,7 +80,7 @@ export default function Home() {
     }
   }, [messagesData]);
 
-  // 处理“发送”按钮点击：调用 /api/chat 发送用户消息
+  // Handling ‘Send’ button clicks: calling /api/chat to send user messages
   const handleSubmit = () => {
     if (input.trim() === "") return;
     // 每次发送新消息前启动轮询
@@ -94,7 +94,7 @@ export default function Home() {
     setInput("");
   };
 
-  // 下拉菜单部分：使用 Dropdown 组件处理选项按钮
+  // Dropdown Menu Section: Using Dropdown Components to Handle Option Buttons
   const options = [
     { 
       icon: "🎓", 
@@ -185,9 +185,9 @@ export default function Home() {
     },
   ];
 
-  // 处理选项动作
+  // Processing option actions
   const handleOptionAction = (selectedText: string) => {
-    // 启动轮询等待新回复
+    // Start polling for new replies
     setPollingEnabled(true);
     if (!chatId) {
       pendingMessageRef.current = selectedText;
@@ -219,7 +219,7 @@ export default function Home() {
             />
           ))}
         </div>
-        {/* 显示消息列表（如果有 chatId 时） */}
+        {/* Display the list of messages (if there is a chatId) */}
         {chatId && messagesData && messagesData.data && (
           <div className="mt-4">
             {messagesData.data.map((msg: any) => (
@@ -265,7 +265,7 @@ export default function Home() {
   );
 }
 
-/** Dropdown 组件：鼠标悬停时显示下拉菜单，支持 detail 为数组 */
+/** Dropdown component: display dropdown menu on mouse hover, support detail as array */
 function Dropdown({ icon, text, detail, onAction }: { 
   icon: string; 
   text: string; 
