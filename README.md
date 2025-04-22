@@ -110,7 +110,7 @@ cd ./backend/api
 python api.py
 ```
 
-The API will run on `http://localhost:5000` by default.
+The API will run on `http://localhost:5001` by default.
 
 #### Frontend - Admin Dashboard
 
@@ -159,7 +159,7 @@ Build and start three services: backend, admin frontend, and user frontend
 
 Expose the following ports:
 
-`http://localhost:5000` → Backend API
+`http://localhost:5001` → Backend API
 
 `http://localhost:3000` → User Interface
 
@@ -172,6 +172,21 @@ destination: 'http://rekro-backend:5000/api/:path*'
 ```
 This ensures the frontend correctly connects to the backend via Docker's internal network.
 
+## Usage Notice Before Using Chatbot
+After starting all three services (backend, user frontend, and admin frontend), please ensure that the database is online and populated before using the chatbot functionality.
+
+1.Go to the Admin Dashboard `http://localhost:3001`
+
+2.Check the System Status to verify that the database is online
+
+  If the database is empty:
+
+
+      Upload PDF files via the PDF Management section
+
+      Or add URLs via the URL Management section
+      
+    Only after there are processed documents or URL content in the system, the chatbot will be able to retrieve and answer queries based on the available data.
 
 ## Core Features
 
