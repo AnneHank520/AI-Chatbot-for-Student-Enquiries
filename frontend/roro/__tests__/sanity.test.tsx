@@ -1,4 +1,4 @@
-import React from 'react'; // ✅ 必须引入
+import React from 'react'; 
 import { render, screen } from '@testing-library/react';
 
 describe('Sanity Test', () => {
