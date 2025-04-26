@@ -87,16 +87,3 @@ This testing cycle covers comprehensive unit and integration tests for core fron
 - 🧪 Consider end-to-end testing (Cypress) for full user flow
 
 ---
-
-## 📂 Test File Structure
-
-```
-__tests__/
-├── chatPage.test.tsx        // Chat logic
-├── chatPolling.test.tsx     // Polling stop logic
-├── dropdown.test.tsx        // Dropdown behavior
-├── home.test.tsx            // Home integration
-├── sanity.test.tsx          // Basic render check
-```
-
----
