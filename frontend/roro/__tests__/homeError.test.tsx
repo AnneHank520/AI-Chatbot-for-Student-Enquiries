@@ -34,7 +34,7 @@ describe('Home Page Error Handling', () => {
       </QueryClientProvider>
     );
 
-    // 默认没有报错边界时应能正常渲染 dropdown
+    
     expect(await screen.findByText('What can I help you with?')).toBeInTheDocument();
   });
 });
