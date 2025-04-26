@@ -60,14 +60,14 @@ describe('Home Page Integration', () => {
   it('triggers chat creation when dropdown detail is clicked', async () => {
     renderHome();
 
-    // Hover 显示 dropdown 内容
+    
     const button = screen.getByText('Studying in Australia');
     fireEvent.mouseEnter(button);
 
     const item = await screen.findByText('What are the benefits of studying in Australia?');
     fireEvent.click(item);
 
-    // 等待输入框被清空（说明消息被发送）
+    
     await waitFor(() => {
       expect(screen.getByRole('textbox')).toHaveValue('');
     });
