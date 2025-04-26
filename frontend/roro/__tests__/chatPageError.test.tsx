@@ -10,7 +10,7 @@ jest.mock('react-markdown', () => {
     <div data-testid="mock-markdown">{children}</div>
   );
 });
-jest.mock('remark-gfm', () => ({})); // ✅ mock 这个 esm 模块
+jest.mock('remark-gfm', () => ({}));
 
 jest.mock('next/navigation', () => ({
   useParams: () => ({ chat_id: '1' }),
@@ -39,10 +39,10 @@ describe('Chat Page - Error Handling', () => {
       </QueryClientProvider>
     );
 
-    // 渲染 Loading 阶段
+    
     expect(screen.getByText('Loading...')).toBeInTheDocument();
 
-    // fallback UI 可以是 Error Boundary、静默失败等，这里只验证组件不崩溃
+    
     await waitFor(() => {
       expect(screen.queryByText('Hi! How can I help you?')).not.toBeInTheDocument();
     });
