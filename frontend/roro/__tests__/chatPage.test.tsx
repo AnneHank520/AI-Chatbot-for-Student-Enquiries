@@ -4,13 +4,13 @@ import Page from '@/app/chat/[chat_id]/page';
 import '@testing-library/jest-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// ✅ mock useParams 和 useRouter
+// mock useParams useRouter
 jest.mock('next/navigation', () => ({
   useParams: () => ({ chat_id: '1' }),
   useRouter: () => ({ push: jest.fn() }),
 }));
 
-// ✅ mock axios
+// mock axios
 jest.mock('axios', () => ({
   post: jest.fn((url, payload) => {
     if (url === '/api/get-chat') {
@@ -31,10 +31,10 @@ jest.mock('axios', () => ({
   }),
 }));
 
-// ✅ mock remark-gfm to avoid ESM error
+// mock remark-gfm to avoid ESM error
 jest.mock('remark-gfm', () => () => {});
 
-// ✅ mock react-markdown 避免 JSX 报错
+// mock react-markdown
 jest.mock('react-markdown', () => {
   return ({ children }: { children: React.ReactNode }) => (
     <div data-testid="mock-markdown">{children}</div>
@@ -69,7 +69,7 @@ describe('Chat Page', () => {
     const textarea = screen.getByRole('textbox');
     fireEvent.change(textarea, { target: { value: "What's up, Roro?" } });
 
-    // ⬆️ 用 aria-label 提高测试选择性
+    
     const sendButton = screen.getByLabelText('send');
     fireEvent.click(sendButton);
 
