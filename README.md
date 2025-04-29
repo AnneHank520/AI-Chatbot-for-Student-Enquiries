@@ -168,7 +168,7 @@ Expose the following ports:
 2. API Proxy Configuration for Docker
 In frontend/roro-admin/next.config.ts, make sure the API rewrite is pointing to the internal service name:
 ```ts
-destination: 'http://rekro-backend:5000/api/:path*'
+destination: 'http://rekro-backend:5001/api/:path*'
 ```
 This ensures the frontend correctly connects to the backend via Docker's internal network.
 
