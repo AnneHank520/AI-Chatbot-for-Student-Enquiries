@@ -153,6 +153,11 @@ At the project root:
 ```bash
 docker compose up --build
 ```
+Or if you use mac, pleace add .env(API KEY) at the project root, and then:
+```bash
+docker compose build --no-cache
+docker compose up
+```
 This will:
 
 Build and start three services: backend, admin frontend, and user frontend
