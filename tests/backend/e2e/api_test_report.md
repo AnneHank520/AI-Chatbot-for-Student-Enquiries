@@ -33,7 +33,7 @@ Total: **7 tests passed**
 
 - Test file: `tests/backend/e2e/test_api_requests.py`
 - Uses `pytest` fixtures and temporary files
-- Reads large test file `Resource.pdf` from `uploads/`
+- Reads large test file `Resource.pdf` from `uploads/`(previously included during testing; after project simplification, if running tests, please manually create an `uploads/` folder under the project root and place `Resource.pdf` inside)
 - Automatically logs results to both console and `test_api.log`
 - Reads DashScope API key from `.env` file (using `python-dotenv`)
 
