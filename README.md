@@ -187,7 +187,7 @@ After starting all three services (backend, user frontend, and admin frontend), 
   If the database is empty:
 
 
-      Upload PDF files via the PDF Management section
+      Upload PDF files via the PDF Management section (you can download a sample PDF from (https://drive.google.com/drive/folders/1zcpivHBRUTRon5TCy0r-uSOgBcWfFc1n?usp=drive_link))
 
       Or add URLs via the URL Management section
       
