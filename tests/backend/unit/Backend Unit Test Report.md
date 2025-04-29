@@ -14,6 +14,9 @@ This document summarizes the execution results of unit tests for each backend mo
 ```bash
 pip install -r tests/backend/requirements-dev.txt
 ```
+## Note on Project Structure Changes
+
+In the later stage of the project, we merged the functionalities of pdf_convert.py, query_process.py, retrieval.py, and generation.py into api.py to simplify the structure. As a result, the individual components within api.py have already been indirectly verified through the original unit tests.
 
 ---
 
